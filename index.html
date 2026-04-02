@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#075e54">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>TasWana</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect rx='20' width='100' height='100' fill='%23075e54'/><text x='50' y='62' text-anchor='middle' font-size='40' font-weight='bold' fill='white'>T</text></svg>">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-inner">
+    <div class="header-logo">T</div>
+    <h1>TasWana</h1>
+  </div>
+</header>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="page-dashboard" class="page active">
+  <!-- Hero card -->
+  <div class="hero-card">
+    <div class="hero-label">Total Savings (Gross)</div>
+    <div class="hero-value" id="dash-total-savings">৳0</div>
+    <div class="hero-divider"></div>
+    <div class="hero-label">Net Balance</div>
+    <div class="hero-sub" id="dash-net-balance">৳0</div>
+    <div class="hero-hint">Savings + Lent &minus; Borrowed</div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="stat-card green">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5m-5 5l5-5 5 5"/></svg>
+      </div>
+      <div class="stat-label">This Month Savings</div>
+      <div class="stat-value" id="dash-month-savings">৳0</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m5-5l-5 5-5-5"/></svg>
+      </div>
+      <div class="stat-label">This Month Expenses</div>
+      <div class="stat-value" id="dash-month-expense">৳0</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+      </div>
+      <div class="stat-label">Total Lent Out</div>
+      <div class="stat-value" id="dash-total-lent">৳0</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="stat-label">Total Borrowed</div>
+      <div class="stat-value" id="dash-total-borrowed">৳0</div>
+    </div>
+  </div>
+
+  <!-- Target card -->
+  <div class="card target-card">
+    <div class="card-header-row">
+      <div class="card-title">Monthly Savings Target</div>
+      <span class="badge" id="dash-target-badge">&mdash;</span>
+    </div>
+    <div class="target-value" id="dash-target-val">৳0 / ৳3,00,000</div>
+    <div class="target-bar">
+      <div class="target-bar-fill" id="dash-target-fill" style="width:0%"></div>
+    </div>
+    <div class="target-label">
+      <span>0%</span>
+      <span>Target: ৳3,00,000</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVINGS ===== -->
+<div id="page-savings" class="page">
+  <div class="month-nav">
+    <button onclick="changeMonth('savings',-1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span id="savings-month-label"></span>
+    <button onclick="changeMonth('savings',1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="card">
+    <div class="card-header-row mb-12">
+      <div class="card-title">Month Total</div>
+      <div class="card-value positive" id="savings-month-total">৳0</div>
+    </div>
+    <ul class="entry-list" id="savings-list"></ul>
+    <div class="empty" id="savings-empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20m-7-7l7 7 7-7"/></svg>
+      <p>No savings recorded this month</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXPENDITURE ===== -->
+<div id="page-expense" class="page">
+  <div class="month-nav">
+    <button onclick="changeMonth('expense',-1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span id="expense-month-label"></span>
+    <button onclick="changeMonth('expense',1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="card">
+    <div class="card-header-row mb-12">
+      <div class="card-title">Month Total</div>
+      <div class="card-value negative" id="expense-month-total">৳0</div>
+    </div>
+    <ul class="entry-list" id="expense-list"></ul>
+    <div class="empty" id="expense-empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+      <p>No expenses recorded this month</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOANS ===== -->
+<div id="page-loans" class="page">
+  <div class="tabs">
+    <button type="button" class="tab-btn active" id="loan-tab-all" onclick="setLoanFilter('all')">All</button>
+    <button type="button" class="tab-btn" id="loan-tab-borrowed" onclick="setLoanFilter('borrowed')">Borrowed</button>
+    <button type="button" class="tab-btn" id="loan-tab-lent" onclick="setLoanFilter('lent')">Lent</button>
+  </div>
+  <div class="card">
+    <div class="loan-summary">
+      <div class="loan-summary-item">
+        <div class="card-title">Total Borrowed</div>
+        <div class="card-value negative" id="loans-total-borrowed">৳0</div>
+      </div>
+      <div class="loan-summary-divider"></div>
+      <div class="loan-summary-item right">
+        <div class="card-title">Total Lent</div>
+        <div class="card-value positive" id="loans-total-lent">৳0</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <ul class="entry-list" id="loans-list"></ul>
+    <div class="empty" id="loans-empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 9V7a5 5 0 00-10 0v2"/><rect x="3" y="9" width="18" height="12" rx="2"/></svg>
+      <p>No loan entries yet</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GRAPHS ===== -->
+<div id="page-graphs" class="page">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchChart('savings')">Savings</button>
+    <button class="tab-btn" onclick="switchChart('expense')">Expenses</button>
+  </div>
+  <div class="card">
+    <div class="chart-container">
+      <canvas id="main-chart"></canvas>
+    </div>
+  </div>
+  <div class="card" id="category-chart-card" style="display:none">
+    <div class="card-title mb-12">Expense Breakdown (Last 6 Months)</div>
+    <div class="chart-container">
+      <canvas id="category-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FAB ===== -->
+<button class="fab" id="fab-btn" onclick="openAddModal()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+</button>
+
+<!-- ===== ADD MODAL (Savings/Expenses) ===== -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add Entry</h2>
+      <button class="modal-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="entry-form" onsubmit="saveEntry(event)">
+      <input type="hidden" id="entry-id">
+      <div class="tabs mb-16">
+        <button type="button" class="tab-btn active" id="tab-saving" onclick="setEntryType('saving')">Saving</button>
+        <button type="button" class="tab-btn" id="tab-expense" onclick="setEntryType('expense')">Expense</button>
+      </div>
+      <div class="form-group">
+        <label for="entry-amount">Amount (BDT)</label>
+        <input type="number" id="entry-amount" placeholder="0" min="0" step="1" required>
+      </div>
+      <div class="form-group">
+        <label for="entry-desc">Description</label>
+        <input type="text" id="entry-desc" placeholder="e.g. Salary, Grocery...">
+      </div>
+      <div class="form-group" id="category-group" style="display:none">
+        <label for="entry-cat">Category</label>
+        <select id="entry-cat">
+          <option value="Grocery">Grocery</option>
+          <option value="House Rent">House Rent</option>
+          <option value="Parking Rent">Parking Rent</option>
+          <option value="Service Charge">Service Charge</option>
+          <option value="Children's Education">Children's Education</option>
+          <option value="Medical">Medical</option>
+          <option value="Car Maintenance">Car Maintenance</option>
+          <option value="Communication">Communication</option>
+          <option value="Sports">Sports</option>
+          <option value="Holidays">Holidays</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Gifts">Gifts</option>
+          <option value="Mobile">Mobile</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="entry-date">Date</label>
+        <input type="date" id="entry-date" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="entry-submit-btn">Save</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== LOAN MODAL ===== -->
+<div class="modal-overlay" id="loan-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="loan-modal-title">Add Loan Entry</h2>
+      <button class="modal-close" onclick="closeLoanModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="loan-form" onsubmit="saveLoan(event)">
+      <input type="hidden" id="loan-id">
+      <div class="tabs mb-16">
+        <button type="button" class="tab-btn active" id="loan-tab-type-borrowed" onclick="setLoanType('borrowed')">Borrowed</button>
+        <button type="button" class="tab-btn" id="loan-tab-type-lent" onclick="setLoanType('lent')">Lent</button>
+      </div>
+      <div class="form-group">
+        <label for="loan-amount">Amount (BDT)</label>
+        <input type="number" id="loan-amount" placeholder="0" min="0" step="1" required>
+      </div>
+      <div class="form-group">
+        <label for="loan-person">Person Name</label>
+        <input type="text" id="loan-person" placeholder="e.g. Ahmed, Rahim..." required>
+      </div>
+      <div class="form-group">
+        <label for="loan-desc">Note (optional)</label>
+        <input type="text" id="loan-desc" placeholder="e.g. For house repair...">
+      </div>
+      <div class="form-group">
+        <label for="loan-date">Date</label>
+        <input type="date" id="loan-date" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loan-submit-btn">Save</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <button class="active" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </button>
+  <button data-page="savings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 4 3 7 5.5 8l.5 3h7l.5-3c2.5-1 5.5-4 5.5-8 0-2-1-3-2-3"/><path d="M2 9.1C1.8 10 2 12 2 12"/></svg>
+    <span>Savings</span>
+  </button>
+  <button data-page="expense">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    <span>Expenses</span>
+  </button>
+  <button data-page="loans">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+    <span>Loans</span>
+  </button>
+  <button data-page="graphs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    <span>Graphs</span>
+  </button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

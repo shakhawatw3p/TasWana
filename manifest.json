@@ -1,0 +1,17 @@
+{
+  "name": "TasWana",
+  "short_name": "TasWana",
+  "description": "Track your savings and monthly expenditures",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#075e54",
+  "theme_color": "#075e54",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

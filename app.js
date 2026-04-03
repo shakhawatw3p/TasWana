@@ -765,19 +765,35 @@ function calcZakatEntries() {
 
   if (zakatableWealth < nisab) return [];
 
-  // Only entries that have completed 1 lunar year
-  return entries
+  // Savings entries that have completed 1 lunar year
+  const savingsEligible = entries
     .filter(e => e.type === 'saving')
-    .sort((a, b) => a.date.localeCompare(b.date))
     .filter(e => getEntryAgeDays(e.date) >= LUNAR_YEAR_DAYS)
     .map(e => ({
       id: e.id,
       date: e.date,
-      desc: e.desc,
+      desc: e.desc || 'Savings',
       amount: e.amount,
+      source: 'saving',
       days: getEntryAgeDays(e.date),
       zakat: Math.round(e.amount * 0.025)
     }));
+
+  // Lent entries that have completed 1 lunar year
+  const lentEligible = loans
+    .filter(l => l.loanType === 'lent')
+    .filter(l => getEntryAgeDays(l.date) >= LUNAR_YEAR_DAYS)
+    .map(l => ({
+      id: l.id,
+      date: l.date,
+      desc: 'Lent to ' + (l.person || ''),
+      amount: l.amount,
+      source: 'lent',
+      days: getEntryAgeDays(l.date),
+      zakat: Math.round(l.amount * 0.025)
+    }));
+
+  return [...savingsEligible, ...lentEligible].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function renderZakatEntries() {
@@ -798,7 +814,7 @@ function renderZakatEntries() {
   emptyEl.style.display = 'none';
   listEl.innerHTML = zakatEntries.map(e => `
     <div class="zakat-entry-row">
-      <span class="ze-date">${formatDate(e.date)}</span>
+      <span class="ze-date">${formatDate(e.date)}<br><small class="ze-source">${esc(e.desc)}</small></span>
       <span class="ze-amount">${formatBDT(e.amount)}</span>
       <span class="ze-zakat">${formatBDT(e.zakat)}</span>
     </div>

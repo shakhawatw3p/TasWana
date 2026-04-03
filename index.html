@@ -130,6 +130,53 @@
 
 <!-- ===== SAVINGS ===== -->
 <div id="page-savings" class="page">
+  <!-- Money Storage Breakdown -->
+  <div class="card storage-card">
+    <div class="card-header-row mb-12">
+      <div class="card-title">Money Storage Breakdown</div>
+      <button class="btn btn-sm btn-outline" onclick="toggleStorageEdit()">
+        <span id="storage-edit-label">Edit</span>
+      </button>
+    </div>
+    <div class="storage-total-row">
+      <span>Storage Total</span>
+      <strong id="storage-total">৳0</strong>
+    </div>
+    <div class="storage-grid" id="storage-display">
+      <div class="storage-group">
+        <div class="storage-group-title">Wise</div>
+        <div class="storage-item"><span>Wise</span><strong id="disp-wise">৳0</strong></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Bank</div>
+        <div class="storage-item"><span>City Islamic</span><strong id="disp-city-islamic">৳0</strong></div>
+        <div class="storage-item"><span>City Freelancer</span><strong id="disp-city-freelancer">৳0</strong></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Cash</div>
+        <div class="storage-item"><span>BDT (Taka)</span><strong id="disp-cash-bdt">৳0</strong></div>
+        <div class="storage-item"><span>USD (Dollar)</span><strong id="disp-cash-usd">$0</strong></div>
+      </div>
+    </div>
+    <div class="storage-edit-form" id="storage-edit" style="display:none">
+      <div class="storage-group">
+        <div class="storage-group-title">Wise</div>
+        <div class="form-group"><label>Wise (BDT)</label><input type="number" id="inp-wise" min="0" step="1" placeholder="0"></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Bank</div>
+        <div class="form-group"><label>City Islamic Account (BDT)</label><input type="number" id="inp-city-islamic" min="0" step="1" placeholder="0"></div>
+        <div class="form-group"><label>City Freelancer Account (BDT)</label><input type="number" id="inp-city-freelancer" min="0" step="1" placeholder="0"></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Cash</div>
+        <div class="form-group"><label>BDT (Taka)</label><input type="number" id="inp-cash-bdt" min="0" step="1" placeholder="0"></div>
+        <div class="form-group"><label>USD (Dollar)</label><input type="number" id="inp-cash-usd" min="0" step="0.01" placeholder="0"></div>
+      </div>
+      <button type="button" class="btn btn-primary btn-block" onclick="saveStorage()">Update Storage</button>
+    </div>
+  </div>
+
   <div class="month-nav">
     <button onclick="changeMonth('savings',-1)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
@@ -313,6 +360,11 @@
           <option value="Shopping">Shopping</option>
           <option value="Gifts">Gifts</option>
           <option value="Mobile">Mobile</option>
+          <option value="Donation">Donation</option>
+          <option value="Village Spending">Village Spending</option>
+          <option value="Party Spending">Party Spending</option>
+          <option value="Sweety's Spending">Sweety's Spending</option>
+          <option value="Guardian Gifts">Guardian Gifts</option>
           <option value="Other">Other</option>
         </select>
       </div>

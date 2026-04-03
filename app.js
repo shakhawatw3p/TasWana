@@ -29,6 +29,7 @@ async function syncToCloud() {
     await setDoc(doc(db, 'users', fbUser.uid), {
       entries: getEntries(),
       loans: getLoans(),
+      moneyStorage: getMoneyStorage(),
       pin: localStorage.getItem(PIN_KEY) || '',
       updatedAt: new Date().toISOString()
     });
@@ -48,6 +49,7 @@ async function syncFromCloud() {
       const data = snap.data();
       if (data.entries) saveEntriesToLocal(data.entries);
       if (data.loans) saveLoansToLocal(data.loans);
+      if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
       if (data.pin && !localStorage.getItem(PIN_KEY)) {
         localStorage.setItem(PIN_KEY, data.pin);
       }
@@ -259,6 +261,67 @@ function applyPrivacy() {
   document.getElementById('eye-closed').style.display = privacyOn ? 'block' : 'none';
 }
 
+// ===== MONEY STORAGE =====
+const MONEY_STORAGE_KEY = 'taswana_money_storage';
+
+function getMoneyStorage() {
+  return JSON.parse(localStorage.getItem(MONEY_STORAGE_KEY) || '{"wise":0,"cityIslamic":0,"cityFreelancer":0,"cashBdt":0,"cashUsd":0}');
+}
+
+function saveMoneyStorage(data) {
+  localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data));
+  syncToCloud();
+}
+
+function getStorageTotal() {
+  const s = getMoneyStorage();
+  return s.wise + s.cityIslamic + s.cityFreelancer + s.cashBdt;
+}
+
+function renderMoneyStorage() {
+  const s = getMoneyStorage();
+  const total = s.wise + s.cityIslamic + s.cityFreelancer + s.cashBdt;
+  document.getElementById('storage-total').textContent = formatBDT(total);
+  document.getElementById('disp-wise').textContent = formatBDT(s.wise);
+  document.getElementById('disp-city-islamic').textContent = formatBDT(s.cityIslamic);
+  document.getElementById('disp-city-freelancer').textContent = formatBDT(s.cityFreelancer);
+  document.getElementById('disp-cash-bdt').textContent = formatBDT(s.cashBdt);
+  document.getElementById('disp-cash-usd').textContent = '$' + (s.cashUsd || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+  // Fill edit inputs
+  document.getElementById('inp-wise').value = s.wise || '';
+  document.getElementById('inp-city-islamic').value = s.cityIslamic || '';
+  document.getElementById('inp-city-freelancer').value = s.cityFreelancer || '';
+  document.getElementById('inp-cash-bdt').value = s.cashBdt || '';
+  document.getElementById('inp-cash-usd').value = s.cashUsd || '';
+}
+
+let storageEditOpen = false;
+
+window.toggleStorageEdit = function() {
+  storageEditOpen = !storageEditOpen;
+  document.getElementById('storage-edit').style.display = storageEditOpen ? 'block' : 'none';
+  document.getElementById('storage-display').style.display = storageEditOpen ? 'none' : 'flex';
+  document.getElementById('storage-edit-label').textContent = storageEditOpen ? 'Cancel' : 'Edit';
+};
+
+window.saveStorage = function() {
+  const data = {
+    wise: parseInt(document.getElementById('inp-wise').value) || 0,
+    cityIslamic: parseInt(document.getElementById('inp-city-islamic').value) || 0,
+    cityFreelancer: parseInt(document.getElementById('inp-city-freelancer').value) || 0,
+    cashBdt: parseInt(document.getElementById('inp-cash-bdt').value) || 0,
+    cashUsd: parseFloat(document.getElementById('inp-cash-usd').value) || 0
+  };
+  saveMoneyStorage(data);
+  storageEditOpen = false;
+  document.getElementById('storage-edit').style.display = 'none';
+  document.getElementById('storage-display').style.display = 'flex';
+  document.getElementById('storage-edit-label').textContent = 'Edit';
+  renderMoneyStorage();
+  renderDashboard();
+};
+
 // ===== DATA LAYER =====
 const STORAGE_KEY = 'taswana_entries';
 const LOANS_KEY = 'taswana_loans';
@@ -446,6 +509,7 @@ function renderDashboard() {
 
 // ===== SAVINGS LIST =====
 function renderSavings() {
+  renderMoneyStorage();
   const mk = getOffsetMonth(savingsMonthOffset);
   document.getElementById('savings-month-label').textContent = monthLabel(mk);
 
@@ -869,10 +933,11 @@ if ('serviceWorker' in navigator) {
 // ===== BACKUP & RESTORE =====
 window.exportData = function() {
   const data = {
-    version: 1,
+    version: 2,
     exportDate: new Date().toISOString(),
     entries: getEntries(),
     loans: getLoans(),
+    moneyStorage: getMoneyStorage(),
     pin: localStorage.getItem(PIN_KEY),
     privacy: localStorage.getItem('taswana_privacy')
   };
@@ -911,6 +976,7 @@ window.importData = function(event) {
 
       if (data.entries) saveEntries(data.entries);
       if (data.loans) saveLoans(data.loans);
+      if (data.moneyStorage) saveMoneyStorage(data.moneyStorage);
       if (data.pin) localStorage.setItem(PIN_KEY, data.pin);
       if (data.privacy) localStorage.setItem('taswana_privacy', data.privacy);
 

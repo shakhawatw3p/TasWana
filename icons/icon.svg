@@ -1,5 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="102" fill="#075e54"/>
-  <text x="256" y="320" text-anchor="middle" font-family="Arial,sans-serif" font-size="220" font-weight="bold" fill="#25d366">T</text>
-  <text x="256" y="420" text-anchor="middle" font-family="Arial,sans-serif" font-size="60" fill="#ffffff" opacity="0.9">TasWana</text>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e94560"/>
+      <stop offset="50%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ff8e53"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e94560" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ff8e53" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Decorative circles -->
+  <circle cx="400" cy="80" r="120" fill="url(#glow)"/>
+  <circle cx="80" cy="440" r="100" fill="url(#glow)"/>
+  <!-- T letter -->
+  <text x="256" y="305" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="240" font-weight="800" fill="url(#accent)" letter-spacing="-10">T</text>
+  <!-- Underline accent -->
+  <rect x="156" y="330" width="200" height="6" rx="3" fill="url(#accent)" opacity="0.8"/>
+  <!-- TasWana text -->
+  <text x="256" y="410" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="58" font-weight="600" fill="#ffffff" letter-spacing="6" opacity="0.9">TasWana</text>
+  <!-- Subtle tagline -->
+  <text x="256" y="450" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="24" fill="#ffffff" opacity="0.4" letter-spacing="4">FINANCE TRACKER</text>
 </svg>

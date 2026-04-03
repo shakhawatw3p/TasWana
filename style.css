@@ -50,14 +50,14 @@ header {
 .header-logo {
   width: 34px;
   height: 34px;
-  background: rgba(255,255,255,.2);
+  background: linear-gradient(135deg, #e94560, #ff8e53);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 1.1rem;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(233,69,96,.3);
 }
 header h1 {
   font-size: 1.2rem;
@@ -688,7 +688,7 @@ header h1 {
 .lock-logo {
   width: 64px;
   height: 64px;
-  background: rgba(255,255,255,.15);
+  background: linear-gradient(135deg, #e94560, #ff8e53);
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -696,7 +696,7 @@ header h1 {
   font-weight: 800;
   font-size: 1.8rem;
   margin: 0 auto 16px;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(233,69,96,.35);
 }
 .lock-title {
   font-size: 1.4rem;

@@ -30,6 +30,7 @@ async function syncToCloud() {
       entries: getEntries(),
       loans: getLoans(),
       moneyStorage: getMoneyStorage(),
+      target: getTarget(),
       nisab: getNisab(),
       hawl: getHawlDate(),
       pin: localStorage.getItem(PIN_KEY) || '',
@@ -52,6 +53,7 @@ async function syncFromCloud() {
       if (data.entries) saveEntriesToLocal(data.entries);
       if (data.loans) saveLoansToLocal(data.loans);
       if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
+      if (data.target) localStorage.setItem(TARGET_KEY, data.target);
       if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
       if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin && !localStorage.getItem(PIN_KEY)) {
@@ -391,11 +393,30 @@ window.saveNisab = function() {
   syncToCloud();
 };
 
+// ===== SAVINGS TARGET =====
+let targetEditOpen = false;
+
+window.toggleTargetEdit = function() {
+  targetEditOpen = !targetEditOpen;
+  document.getElementById('target-edit').style.display = targetEditOpen ? 'block' : 'none';
+  document.getElementById('target-edit-label').textContent = targetEditOpen ? 'Cancel' : 'Edit';
+};
+
+window.saveTarget = function() {
+  const val = parseInt(document.getElementById('inp-target').value) || 0;
+  localStorage.setItem(TARGET_KEY, val);
+  targetEditOpen = false;
+  document.getElementById('target-edit').style.display = 'none';
+  document.getElementById('target-edit-label').textContent = 'Edit';
+  renderDashboard();
+  syncToCloud();
+};
+
 // ===== MONEY STORAGE =====
 const MONEY_STORAGE_KEY = 'taswana_money_storage';
 
 function getMoneyStorage() {
-  return JSON.parse(localStorage.getItem(MONEY_STORAGE_KEY) || '{"wise":0,"cityIslamic":0,"cityFreelancer":0,"cashBdt":0,"cashUsd":0}');
+  return JSON.parse(localStorage.getItem(MONEY_STORAGE_KEY) || '{"wise":0,"bank":0,"mobileMoney":0,"cashBdt":0}');
 }
 
 function saveMoneyStorage(data) {
@@ -405,25 +426,23 @@ function saveMoneyStorage(data) {
 
 function getStorageTotal() {
   const s = getMoneyStorage();
-  return s.wise + s.cityIslamic + s.cityFreelancer + s.cashBdt;
+  return s.wise + s.bank + s.mobileMoney + s.cashBdt;
 }
 
 function renderMoneyStorage() {
   const s = getMoneyStorage();
-  const total = s.wise + s.cityIslamic + s.cityFreelancer + s.cashBdt;
+  const total = s.wise + s.bank + s.mobileMoney + s.cashBdt;
   document.getElementById('storage-total').textContent = formatBDT(total);
   document.getElementById('disp-wise').textContent = formatBDT(s.wise);
-  document.getElementById('disp-city-islamic').textContent = formatBDT(s.cityIslamic);
-  document.getElementById('disp-city-freelancer').textContent = formatBDT(s.cityFreelancer);
+  document.getElementById('disp-bank').textContent = formatBDT(s.bank);
+  document.getElementById('disp-mobile-money').textContent = formatBDT(s.mobileMoney);
   document.getElementById('disp-cash-bdt').textContent = formatBDT(s.cashBdt);
-  document.getElementById('disp-cash-usd').textContent = '$' + (s.cashUsd || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   // Fill edit inputs
   document.getElementById('inp-wise').value = s.wise || '';
-  document.getElementById('inp-city-islamic').value = s.cityIslamic || '';
-  document.getElementById('inp-city-freelancer').value = s.cityFreelancer || '';
+  document.getElementById('inp-bank').value = s.bank || '';
+  document.getElementById('inp-mobile-money').value = s.mobileMoney || '';
   document.getElementById('inp-cash-bdt').value = s.cashBdt || '';
-  document.getElementById('inp-cash-usd').value = s.cashUsd || '';
 }
 
 let storageEditOpen = false;
@@ -438,10 +457,9 @@ window.toggleStorageEdit = function() {
 window.saveStorage = function() {
   const data = {
     wise: parseInt(document.getElementById('inp-wise').value) || 0,
-    cityIslamic: parseInt(document.getElementById('inp-city-islamic').value) || 0,
-    cityFreelancer: parseInt(document.getElementById('inp-city-freelancer').value) || 0,
-    cashBdt: parseInt(document.getElementById('inp-cash-bdt').value) || 0,
-    cashUsd: parseFloat(document.getElementById('inp-cash-usd').value) || 0
+    bank: parseInt(document.getElementById('inp-bank').value) || 0,
+    mobileMoney: parseInt(document.getElementById('inp-mobile-money').value) || 0,
+    cashBdt: parseInt(document.getElementById('inp-cash-bdt').value) || 0
   };
   saveMoneyStorage(data);
   storageEditOpen = false;
@@ -455,7 +473,11 @@ window.saveStorage = function() {
 // ===== DATA LAYER =====
 const STORAGE_KEY = 'taswana_entries';
 const LOANS_KEY = 'taswana_loans';
-const TARGET = 300000;
+const TARGET_KEY = 'taswana_target';
+
+function getTarget() {
+  return parseInt(localStorage.getItem(TARGET_KEY)) || 0;
+}
 
 function getEntries() {
   return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -621,19 +643,39 @@ function renderDashboard() {
   document.getElementById('dash-total-lent').textContent = formatBDT(totalLent);
   document.getElementById('dash-total-borrowed').textContent = formatBDT(totalBorrowed);
 
-  const pct = Math.min((monthSavings / TARGET) * 100, 100);
-  document.getElementById('dash-target-val').textContent = formatBDT(monthSavings) + ' / ' + formatBDT(TARGET);
-  const fill = document.getElementById('dash-target-fill');
-  fill.style.width = pct + '%';
-  fill.style.background = monthSavings >= TARGET ? 'var(--accent)' : 'var(--warning)';
+  const target = getTarget();
+  if (target > 0) {
+    const pct = Math.min((monthSavings / target) * 100, 100);
+    document.getElementById('dash-target-val').textContent = formatBDT(monthSavings) + ' / ' + formatBDT(target);
+    const fill = document.getElementById('dash-target-fill');
+    fill.style.width = pct + '%';
+    fill.style.background = monthSavings >= target ? 'var(--accent)' : 'var(--warning)';
+    document.getElementById('dash-target-label-text').textContent = 'Target: ' + formatBDT(target);
 
-  const badge = document.getElementById('dash-target-badge');
-  if (monthSavings >= TARGET) {
-    badge.textContent = 'Above Target';
-    badge.className = 'badge above';
+    const badge = document.getElementById('dash-target-badge');
+    if (monthSavings >= target) {
+      badge.textContent = 'Above Target';
+      badge.className = 'badge above';
+    } else {
+      badge.textContent = 'Below Target';
+      badge.className = 'badge below';
+    }
   } else {
-    badge.textContent = 'Below Target';
-    badge.className = 'badge below';
+    document.getElementById('dash-target-val').textContent = 'No target set';
+    document.getElementById('dash-target-fill').style.width = '0%';
+    document.getElementById('dash-target-label-text').textContent = 'Set a target';
+    const badge = document.getElementById('dash-target-badge');
+    badge.textContent = 'Not set';
+    badge.className = 'badge';
+  }
+  document.getElementById('inp-target').value = target || '';
+
+  // Welcome message
+  const welcomeEl = document.getElementById('welcome-msg');
+  if (fbUser && fbUser.displayName) {
+    welcomeEl.innerHTML = 'আসসালামু আলাইকুম <strong>' + esc(fbUser.displayName) + '</strong>, control your money—or it will control you :)';
+  } else {
+    welcomeEl.innerHTML = 'আসসালামু আলাইকুম, control your money—or it will control you :)';
   }
 
   renderZakat();
@@ -1065,11 +1107,12 @@ if ('serviceWorker' in navigator) {
 // ===== BACKUP & RESTORE =====
 window.exportData = function() {
   const data = {
-    version: 3,
+    version: 4,
     exportDate: new Date().toISOString(),
     entries: getEntries(),
     loans: getLoans(),
     moneyStorage: getMoneyStorage(),
+    target: getTarget(),
     nisab: getNisab(),
     hawl: getHawlDate(),
     pin: localStorage.getItem(PIN_KEY),
@@ -1111,6 +1154,7 @@ window.importData = function(event) {
       if (data.entries) saveEntries(data.entries);
       if (data.loans) saveLoans(data.loans);
       if (data.moneyStorage) saveMoneyStorage(data.moneyStorage);
+      if (data.target) localStorage.setItem(TARGET_KEY, data.target);
       if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
       if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin) localStorage.setItem(PIN_KEY, data.pin);

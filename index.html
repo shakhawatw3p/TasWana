@@ -51,7 +51,7 @@
 <header>
   <div class="header-inner">
     <div class="header-logo">৳</div>
-    <h1>TasWana <small>Control your money—or it will control you.</small></h1>
+    <h1>TasWana <small>Allah is the ultimate source of all sustenance (Rizq)</small></h1>
     <span class="sync-status" id="sync-status" title="Cloud sync status">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
     </span>
@@ -70,6 +70,9 @@
 
 <!-- ===== DASHBOARD ===== -->
 <div id="page-dashboard" class="page active">
+  <!-- Welcome message -->
+  <div class="welcome-msg" id="welcome-msg"></div>
+
   <!-- Hero card -->
   <div class="hero-card">
     <div class="hero-label">Total Savings (Gross)</div>
@@ -115,22 +118,34 @@
   <div class="card target-card">
     <div class="card-header-row">
       <div class="card-title">Monthly Savings Target</div>
-      <span class="badge" id="dash-target-badge">&mdash;</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="badge" id="dash-target-badge">&mdash;</span>
+        <button class="btn btn-sm btn-outline" onclick="toggleTargetEdit()">
+          <span id="target-edit-label">Edit</span>
+        </button>
+      </div>
     </div>
-    <div class="target-value" id="dash-target-val">৳0 / ৳3,00,000</div>
+    <div class="target-value" id="dash-target-val">৳0 / ৳0</div>
     <div class="target-bar">
       <div class="target-bar-fill" id="dash-target-fill" style="width:0%"></div>
     </div>
     <div class="target-label">
       <span>0%</span>
-      <span>Target: ৳3,00,000</span>
+      <span id="dash-target-label-text">Target: ৳0</span>
+    </div>
+    <div class="target-edit-form" id="target-edit" style="display:none">
+      <div class="form-group" style="margin-top:12px">
+        <label for="inp-target">Monthly Target Amount (BDT)</label>
+        <input type="number" id="inp-target" min="0" step="1" placeholder="e.g. 300000">
+      </div>
+      <button type="button" class="btn btn-primary btn-block" onclick="saveTarget()">Update Target</button>
     </div>
   </div>
 
   <!-- Zakat card -->
   <div class="card zakat-card">
     <div class="card-header-row mb-12">
-      <div class="card-title">Zakat Calculator</div>
+      <div class="card-title" style="font-weight:800;font-size:.8rem">Zakat Calculator</div>
       <button class="btn btn-sm btn-outline" onclick="toggleZakatEdit()">
         <span id="zakat-edit-label">Set Nisab</span>
       </button>
@@ -192,34 +207,38 @@
     </div>
     <div class="storage-grid" id="storage-display">
       <div class="storage-group">
-        <div class="storage-group-title">Wise</div>
-        <div class="storage-item"><span>Wise</span><strong id="disp-wise">৳0</strong></div>
+        <div class="storage-group-title">Online Money</div>
+        <div class="storage-item"><span>Online Money</span><strong id="disp-wise">৳0</strong></div>
       </div>
       <div class="storage-group">
         <div class="storage-group-title">Bank</div>
-        <div class="storage-item"><span>City Islamic</span><strong id="disp-city-islamic">৳0</strong></div>
-        <div class="storage-item"><span>City Freelancer</span><strong id="disp-city-freelancer">৳0</strong></div>
+        <div class="storage-item"><span>Bank</span><strong id="disp-bank">৳0</strong></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Mobile Money</div>
+        <div class="storage-item"><span>Mobile Money</span><strong id="disp-mobile-money">৳0</strong></div>
       </div>
       <div class="storage-group">
         <div class="storage-group-title">Cash</div>
-        <div class="storage-item"><span>BDT (Taka)</span><strong id="disp-cash-bdt">৳0</strong></div>
-        <div class="storage-item"><span>USD (Dollar)</span><strong id="disp-cash-usd">$0</strong></div>
+        <div class="storage-item"><span>Cash</span><strong id="disp-cash-bdt">৳0</strong></div>
       </div>
     </div>
     <div class="storage-edit-form" id="storage-edit" style="display:none">
       <div class="storage-group">
-        <div class="storage-group-title">Wise</div>
-        <div class="form-group"><label>Wise (BDT)</label><input type="number" id="inp-wise" min="0" step="1" placeholder="0"></div>
+        <div class="storage-group-title">Online Money</div>
+        <div class="form-group"><label>Online Money (BDT)</label><input type="number" id="inp-wise" min="0" step="1" placeholder="0"></div>
       </div>
       <div class="storage-group">
         <div class="storage-group-title">Bank</div>
-        <div class="form-group"><label>City Islamic Account (BDT)</label><input type="number" id="inp-city-islamic" min="0" step="1" placeholder="0"></div>
-        <div class="form-group"><label>City Freelancer Account (BDT)</label><input type="number" id="inp-city-freelancer" min="0" step="1" placeholder="0"></div>
+        <div class="form-group"><label>Bank Total (BDT)</label><input type="number" id="inp-bank" min="0" step="1" placeholder="0"></div>
+      </div>
+      <div class="storage-group">
+        <div class="storage-group-title">Mobile Money</div>
+        <div class="form-group"><label>Mobile Money (BDT)</label><input type="number" id="inp-mobile-money" min="0" step="1" placeholder="0"></div>
       </div>
       <div class="storage-group">
         <div class="storage-group-title">Cash</div>
-        <div class="form-group"><label>BDT (Taka)</label><input type="number" id="inp-cash-bdt" min="0" step="1" placeholder="0"></div>
-        <div class="form-group"><label>USD (Dollar)</label><input type="number" id="inp-cash-usd" min="0" step="0.01" placeholder="0"></div>
+        <div class="form-group"><label>Cash (BDT)</label><input type="number" id="inp-cash-bdt" min="0" step="1" placeholder="0"></div>
       </div>
       <button type="button" class="btn btn-primary btn-block" onclick="saveStorage()">Update Storage</button>
     </div>
@@ -304,7 +323,7 @@
 <div id="page-settings" class="page">
   <div class="card">
     <div class="card-title mb-12">Backup & Restore</div>
-    <p class="settings-desc">Your data is stored locally on this device. Export regularly to avoid losing it.</p>
+    <p class="settings-desc">Your data is stored locally on this device if you don't sign in with your email. Export regularly to avoid losing it.</p>
     <div class="settings-actions">
       <button class="btn btn-primary btn-block" onclick="exportData()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

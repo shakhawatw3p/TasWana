@@ -168,6 +168,23 @@ header h1 small {
 .page.active { display: block; animation: fadeIn .25s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ===== WELCOME MESSAGE ===== */
+.welcome-msg {
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  font-size: .88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.welcome-msg strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.welcome-msg:empty { display: none; }
+
 /* ===== HERO CARD (Dashboard) ===== */
 .hero-card {
   background: linear-gradient(135deg, #075e54 0%, #0a7e6e 50%, #25d366 100%);

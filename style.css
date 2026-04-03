@@ -914,6 +914,34 @@ header h1 small {
   margin-top: 12px;
   line-height: 1.4;
 }
+.zakat-formula {
+  background: #f0fdf4;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+  border-left: 3px solid var(--accent-dark);
+}
+.zakat-formula-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+}
+.zakat-formula-step {
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: flex;
+  gap: 6px;
+}
+.zakat-formula-step span {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 16px;
+}
+.zakat-formula-step strong { color: var(--accent-dark); }
 .zakat-disclaimer {
   font-size: .68rem;
   color: var(--text-muted);

@@ -904,6 +904,16 @@ header h1 small {
 }
 .zakat-silver-info .zakat-row { padding: 2px 0; font-size: .82rem; }
 .zakat-silver-info .zakat-row strong { color: #4338ca; }
+.zakat-note {
+  font-size: .72rem;
+  color: var(--text-muted);
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  padding: 8px 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 12px;
+  line-height: 1.4;
+}
 .zakat-result { margin-bottom: 4px; }
 .zakat-status {
   padding: 8px 12px;

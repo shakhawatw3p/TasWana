@@ -61,13 +61,19 @@ header {
 }
 header h1 {
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -.3px;
   flex: 1;
-  background: linear-gradient(135deg, #e94560, #ff8e53);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
+  line-height: 1.2;
+}
+header h1 small {
+  display: block;
+  font-size: .55rem;
+  font-weight: 400;
+  opacity: .6;
+  letter-spacing: .3px;
+  margin-top: 1px;
 }
 
 /* Privacy toggle */

@@ -116,6 +116,20 @@ function startChangePin() {
   updateDots();
 }
 
+function reloadApp() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(r => r.unregister());
+    }).then(() => {
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+        window.location.reload(true);
+      });
+    });
+  } else {
+    window.location.reload(true);
+  }
+}
+
 function lockApp() {
   const lock = document.getElementById('lock-screen');
   lock.style.display = 'flex';

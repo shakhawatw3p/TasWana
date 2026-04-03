@@ -1,7 +1,110 @@
+// ===== FIREBASE =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut as fbSignOut, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDRILmWna4Q8wMwktqGr7V_D7Lgw7lDPco",
+  authDomain: "taswana-2014.firebaseapp.com",
+  projectId: "taswana-2014",
+  storageBucket: "taswana-2014.firebasestorage.app",
+  messagingSenderId: "522304487789",
+  appId: "1:522304487789:web:db99375aa240ce6b1f9a64"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+let fbUser = null;
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  el.className = 'sync-status ' + status;
+}
+
+async function syncToCloud() {
+  if (!fbUser) return;
+  setSyncStatus('syncing');
+  try {
+    await setDoc(doc(db, 'users', fbUser.uid), {
+      entries: getEntries(),
+      loans: getLoans(),
+      pin: localStorage.getItem(PIN_KEY) || '',
+      updatedAt: new Date().toISOString()
+    });
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Sync to cloud failed:', err);
+    setSyncStatus('offline');
+  }
+}
+
+async function syncFromCloud() {
+  if (!fbUser) return;
+  setSyncStatus('syncing');
+  try {
+    const snap = await getDoc(doc(db, 'users', fbUser.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.entries) saveEntriesToLocal(data.entries);
+      if (data.loans) saveLoansToLocal(data.loans);
+      if (data.pin && !localStorage.getItem(PIN_KEY)) {
+        localStorage.setItem(PIN_KEY, data.pin);
+      }
+      refreshCurrentPage();
+    }
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Sync from cloud failed:', err);
+    setSyncStatus('offline');
+  }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  fbUser = user;
+  updateCloudUI();
+  if (user) {
+    await syncFromCloud();
+  } else {
+    setSyncStatus('offline');
+  }
+});
+
+function updateCloudUI() {
+  const statusEl = document.getElementById('cloud-status');
+  const signInBtn = document.getElementById('cloud-signin-btn');
+  const signOutBtn = document.getElementById('cloud-signout-btn');
+  if (fbUser) {
+    statusEl.innerHTML = 'Signed in as <strong>' + fbUser.email + '</strong><br>Data syncs automatically to cloud.';
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = 'flex';
+  } else {
+    statusEl.textContent = 'Sign in with Google to sync your data to the cloud. Your data will be safe even if you clear browser data.';
+    signInBtn.style.display = 'flex';
+    signOutBtn.style.display = 'none';
+  }
+}
+
+window.cloudSignIn = async function() {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (err) {
+    if (err.code !== 'auth/popup-closed-by-user') {
+      alert('Sign-in failed: ' + err.message);
+    }
+  }
+};
+
+window.cloudSignOut = async function() {
+  if (!confirm('Sign out? Your data will remain locally but won\'t sync to cloud.')) return;
+  await fbSignOut(auth);
+  setSyncStatus('offline');
+};
+
 // ===== PIN LOCK =====
 const PIN_KEY = 'taswana_pin';
 let currentPin = '';
-let pinMode = 'unlock'; // 'unlock', 'setup', 'new', 'confirm'
+let pinMode = 'unlock';
 let newPinTemp = '';
 
 function getStoredPin() {
@@ -22,21 +125,20 @@ function initLock() {
   updateDots();
 }
 
-function pinInput(digit) {
+window.pinInput = function(digit) {
   if (currentPin.length >= 4) return;
   currentPin += digit;
   updateDots();
-
   if (currentPin.length === 4) {
     setTimeout(handlePinComplete, 150);
   }
-}
+};
 
-function pinDelete() {
+window.pinDelete = function() {
   currentPin = currentPin.slice(0, -1);
   updateDots();
   document.getElementById('pin-error').textContent = '';
-}
+};
 
 function updateDots() {
   const dots = document.querySelectorAll('#pin-dots span');
@@ -80,7 +182,6 @@ function handlePinComplete() {
     return;
   }
 
-  // unlock mode
   if (currentPin === stored) {
     unlockApp();
   } else {
@@ -107,16 +208,16 @@ function unlockApp() {
   setTimeout(() => { lock.style.display = 'none'; }, 300);
 }
 
-function startChangePin() {
+window.startChangePin = function() {
   pinMode = 'new';
   document.getElementById('lock-subtitle').textContent = 'Enter new PIN';
   document.getElementById('pin-error').textContent = '';
   document.getElementById('lock-change-btn').style.display = 'none';
   currentPin = '';
   updateDots();
-}
+};
 
-function reloadApp() {
+window.reloadApp = function() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(regs => {
       regs.forEach(r => r.unregister());
@@ -128,9 +229,9 @@ function reloadApp() {
   } else {
     window.location.reload(true);
   }
-}
+};
 
-function lockApp() {
+window.lockApp = function() {
   const lock = document.getElementById('lock-screen');
   lock.style.display = 'flex';
   lock.classList.remove('unlocked');
@@ -140,16 +241,16 @@ function lockApp() {
   document.getElementById('pin-error').textContent = '';
   currentPin = '';
   updateDots();
-}
+};
 
 // ===== PRIVACY MODE =====
 let privacyOn = localStorage.getItem('taswana_privacy') === 'true';
 
-function togglePrivacy() {
+window.togglePrivacy = function() {
   privacyOn = !privacyOn;
   localStorage.setItem('taswana_privacy', privacyOn);
   applyPrivacy();
-}
+};
 
 function applyPrivacy() {
   const dash = document.getElementById('page-dashboard');
@@ -161,22 +262,32 @@ function applyPrivacy() {
 // ===== DATA LAYER =====
 const STORAGE_KEY = 'taswana_entries';
 const LOANS_KEY = 'taswana_loans';
-const TARGET = 300000; // 3 lakh BDT
+const TARGET = 300000;
 
 function getEntries() {
   return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 }
 
-function saveEntries(entries) {
+function saveEntriesToLocal(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function saveEntries(entries) {
+  saveEntriesToLocal(entries);
+  syncToCloud();
 }
 
 function getLoans() {
   return JSON.parse(localStorage.getItem(LOANS_KEY) || '[]');
 }
 
-function saveLoans(loans) {
+function saveLoansToLocal(loans) {
   localStorage.setItem(LOANS_KEY, JSON.stringify(loans));
+}
+
+function saveLoans(loans) {
+  saveLoansToLocal(loans);
+  syncToCloud();
 }
 
 function genId() {
@@ -269,7 +380,7 @@ function getOffsetMonth(offset) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
 
-function changeMonth(type, dir) {
+window.changeMonth = function(type, dir) {
   if (type === 'savings') {
     savingsMonthOffset += dir;
     renderSavings();
@@ -277,7 +388,7 @@ function changeMonth(type, dir) {
     expenseMonthOffset += dir;
     renderExpenses();
   }
-}
+};
 
 // ===== DASHBOARD =====
 function renderDashboard() {
@@ -305,11 +416,9 @@ function renderDashboard() {
     .filter(l => l.loanType === 'borrowed')
     .reduce((s, l) => s + l.amount, 0);
 
-  // Net balance = savings + lent out (asset) - borrowed (liability)
   const netBalance = totalSavings + totalLent - totalBorrowed;
 
   document.getElementById('dash-total-savings').textContent = formatBDT(totalSavings);
-  document.getElementById('dash-net-balance').textContent = formatBDT(netBalance);
   const netEl = document.getElementById('dash-net-balance');
   netEl.textContent = formatBDT(netBalance);
   netEl.className = 'card-value ' + (netBalance >= 0 ? 'positive' : 'negative');
@@ -319,7 +428,6 @@ function renderDashboard() {
   document.getElementById('dash-total-lent').textContent = formatBDT(totalLent);
   document.getElementById('dash-total-borrowed').textContent = formatBDT(totalBorrowed);
 
-  // Target
   const pct = Math.min((monthSavings / TARGET) * 100, 100);
   document.getElementById('dash-target-val').textContent = formatBDT(monthSavings) + ' / ' + formatBDT(TARGET);
   const fill = document.getElementById('dash-target-fill');
@@ -411,13 +519,13 @@ function renderExpenses() {
 // ===== LOANS =====
 let loanFilter = 'all';
 
-function setLoanFilter(filter) {
+window.setLoanFilter = function(filter) {
   loanFilter = filter;
   document.getElementById('loan-tab-all').classList.toggle('active', filter === 'all');
   document.getElementById('loan-tab-borrowed').classList.toggle('active', filter === 'borrowed');
   document.getElementById('loan-tab-lent').classList.toggle('active', filter === 'lent');
   renderLoans();
-}
+};
 
 function renderLoans() {
   const loans = getLoans();
@@ -465,14 +573,14 @@ function renderLoans() {
 // ===== MODAL / FORM (Savings & Expenses) =====
 let entryType = 'saving';
 
-function setEntryType(type) {
+window.setEntryType = function(type) {
   entryType = type;
   document.getElementById('tab-saving').classList.toggle('active', type === 'saving');
   document.getElementById('tab-expense').classList.toggle('active', type === 'expense');
   document.getElementById('category-group').style.display = type === 'expense' ? 'block' : 'none';
-}
+};
 
-function openAddModal() {
+window.openAddModal = function() {
   if (currentPage === 'loans') {
     openLoanModal();
     return;
@@ -486,19 +594,19 @@ function openAddModal() {
   document.getElementById('entry-submit-btn').textContent = 'Save';
 
   if (currentPage === 'expense') {
-    setEntryType('expense');
+    window.setEntryType('expense');
   } else {
-    setEntryType('saving');
+    window.setEntryType('saving');
   }
 
   document.getElementById('add-modal').classList.add('open');
-}
+};
 
-function closeModal() {
+window.closeModal = function() {
   document.getElementById('add-modal').classList.remove('open');
-}
+};
 
-function editEntry(id) {
+window.editEntry = function(id) {
   const e = getEntries().find(x => x.id === id);
   if (!e) return;
   document.getElementById('entry-id').value = e.id;
@@ -508,20 +616,20 @@ function editEntry(id) {
   document.getElementById('modal-title').textContent = 'Edit Entry';
   document.getElementById('entry-submit-btn').textContent = 'Update';
 
-  setEntryType(e.type === 'expense' ? 'expense' : 'saving');
+  window.setEntryType(e.type === 'expense' ? 'expense' : 'saving');
   if (e.category) document.getElementById('entry-cat').value = e.category;
 
   document.getElementById('add-modal').classList.add('open');
-}
+};
 
-function deleteEntry(id) {
+window.deleteEntry = function(id) {
   if (!confirm('Delete this entry?')) return;
   const entries = getEntries().filter(e => e.id !== id);
   saveEntries(entries);
   refreshCurrentPage();
-}
+};
 
-function saveEntry(e) {
+window.saveEntry = function(e) {
   e.preventDefault();
   const id = document.getElementById('entry-id').value;
   const amount = parseInt(document.getElementById('entry-amount').value) || 0;
@@ -543,18 +651,18 @@ function saveEntry(e) {
   }
 
   saveEntries(entries);
-  closeModal();
+  window.closeModal();
   refreshCurrentPage();
-}
+};
 
 // ===== LOAN MODAL =====
 let loanType = 'borrowed';
 
-function setLoanType(type) {
+window.setLoanType = function(type) {
   loanType = type;
   document.getElementById('loan-tab-type-borrowed').classList.toggle('active', type === 'borrowed');
   document.getElementById('loan-tab-type-lent').classList.toggle('active', type === 'lent');
-}
+};
 
 function openLoanModal() {
   document.getElementById('loan-id').value = '';
@@ -564,15 +672,15 @@ function openLoanModal() {
   document.getElementById('loan-date').value = todayStr();
   document.getElementById('loan-modal-title').textContent = 'Add Loan Entry';
   document.getElementById('loan-submit-btn').textContent = 'Save';
-  setLoanType('borrowed');
+  window.setLoanType('borrowed');
   document.getElementById('loan-modal').classList.add('open');
 }
 
-function closeLoanModal() {
+window.closeLoanModal = function() {
   document.getElementById('loan-modal').classList.remove('open');
-}
+};
 
-function editLoan(id) {
+window.editLoan = function(id) {
   const l = getLoans().find(x => x.id === id);
   if (!l) return;
   document.getElementById('loan-id').value = l.id;
@@ -582,18 +690,18 @@ function editLoan(id) {
   document.getElementById('loan-date').value = l.date;
   document.getElementById('loan-modal-title').textContent = 'Edit Loan Entry';
   document.getElementById('loan-submit-btn').textContent = 'Update';
-  setLoanType(l.loanType);
+  window.setLoanType(l.loanType);
   document.getElementById('loan-modal').classList.add('open');
-}
+};
 
-function deleteLoan(id) {
+window.deleteLoan = function(id) {
   if (!confirm('Delete this loan entry?')) return;
   const loans = getLoans().filter(l => l.id !== id);
   saveLoans(loans);
   refreshCurrentPage();
-}
+};
 
-function saveLoan(e) {
+window.saveLoan = function(e) {
   e.preventDefault();
   const id = document.getElementById('loan-id').value;
   const amount = parseInt(document.getElementById('loan-amount').value) || 0;
@@ -615,9 +723,9 @@ function saveLoan(e) {
   }
 
   saveLoans(loans);
-  closeLoanModal();
+  window.closeLoanModal();
   refreshCurrentPage();
-}
+};
 
 function refreshCurrentPage() {
   navigateTo(currentPage);
@@ -625,10 +733,10 @@ function refreshCurrentPage() {
 
 // Close modals on overlay click
 document.getElementById('add-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+  if (e.target === this) window.closeModal();
 });
 document.getElementById('loan-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeLoanModal();
+  if (e.target === this) window.closeLoanModal();
 });
 
 // ===== CHARTS =====
@@ -636,14 +744,14 @@ let mainChart = null;
 let catChart = null;
 let activeChart = 'savings';
 
-function switchChart(type) {
+window.switchChart = function(type) {
   activeChart = type;
   document.querySelectorAll('#page-graphs .tab-btn').forEach((b, i) => {
     b.classList.toggle('active', (i === 0 && type === 'savings') || (i === 1 && type === 'expense'));
   });
   document.getElementById('category-chart-card').style.display = type === 'expense' ? 'block' : 'none';
   renderCharts();
-}
+};
 
 function renderCharts() {
   const entries = getEntries();
@@ -695,7 +803,6 @@ function renderCharts() {
     }
   });
 
-  // Category doughnut (expenses only)
   if (activeChart === 'expense') {
     const last6 = months.slice(-6);
     const catTotals = {};
@@ -760,7 +867,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ===== BACKUP & RESTORE =====
-function exportData() {
+window.exportData = function() {
   const data = {
     version: 1,
     exportDate: new Date().toISOString(),
@@ -779,9 +886,9 @@ function exportData() {
 
   localStorage.setItem('taswana_last_backup', new Date().toISOString());
   renderSettings();
-}
+};
 
-function importData(event) {
+window.importData = function(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -817,7 +924,7 @@ function importData(event) {
   };
   reader.readAsText(file);
   event.target.value = '';
-}
+};
 
 function renderSettings() {
   const lastBackup = localStorage.getItem('taswana_last_backup');
@@ -837,13 +944,15 @@ function renderSettings() {
     '<strong>' + savings + '</strong> savings entries<br>' +
     '<strong>' + expenses + '</strong> expense entries<br>' +
     '<strong>' + loans.length + '</strong> loan entries';
+
+  updateCloudUI();
 }
 
-function resetPin() {
+window.resetPin = function() {
   if (!confirm('Change your PIN?')) return;
-  lockApp();
-  startChangePin();
-}
+  window.lockApp();
+  window.startChangePin();
+};
 
 // ===== INIT =====
 initLock();

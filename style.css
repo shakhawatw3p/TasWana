@@ -806,6 +806,20 @@ header h1 {
   text-align: center;
 }
 
+/* Sync status */
+.sync-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+.sync-status svg { width: 20px; height: 20px; color: rgba(255,255,255,.4); }
+.sync-status.synced svg { color: #6ee7a0; }
+.sync-status.syncing svg { color: #fbbf24; animation: pulse 1s infinite; }
+.sync-status.offline svg { color: rgba(255,255,255,.3); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
 .mb-8 { margin-bottom: 8px; }
 .mb-12 { margin-bottom: 12px; }
 .mb-16 { margin-bottom: 16px; }

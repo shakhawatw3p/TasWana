@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taswana-v29';
+const CACHE_NAME = 'taswana-v30';
 const ASSETS = [
   './',
   './index.html',

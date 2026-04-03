@@ -741,7 +741,6 @@ function renderSavings() {
     </li>
   `).join('');
 
-  renderZakatEntries();
 }
 
 // ===== ZAKAT PER ENTRY =====
@@ -1095,6 +1094,7 @@ window.switchChart = function(type) {
 };
 
 function renderCharts() {
+  renderZakatEntries();
   const entries = getEntries();
   const months = getLast12Months();
 

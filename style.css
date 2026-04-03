@@ -744,7 +744,9 @@ header h1 {
   margin: 0 auto;
 }
 .pin-pad button {
-  height: 58px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
   border: none;
   border-radius: 50%;
   background: rgba(255,255,255,.12);

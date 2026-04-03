@@ -673,9 +673,9 @@ function renderDashboard() {
   // Welcome message
   const welcomeEl = document.getElementById('welcome-msg');
   if (fbUser && fbUser.displayName) {
-    welcomeEl.innerHTML = 'আসসালামু আলাইকুম <strong>' + esc(fbUser.displayName) + '</strong>, control your money—or it will control you :)';
+    welcomeEl.innerHTML = 'আসসালামু আলাইকুম <strong>' + esc(fbUser.displayName) + '</strong><br>control your money—or it will control you \u{1F642}';
   } else {
-    welcomeEl.innerHTML = 'আসসালামু আলাইকুম, control your money—or it will control you :)';
+    welcomeEl.innerHTML = 'আসসালামু আলাইকুম<br>control your money—or it will control you \u{1F642}';
   }
 
   renderZakat();

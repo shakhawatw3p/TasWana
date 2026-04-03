@@ -368,25 +368,27 @@ function renderZakat() {
     hawlRemainingRow.style.display = 'none';
   }
 
-  // Zakat status
+  // Zakat status — uses per-entry calculation
   const statusEl = document.getElementById('zakat-status');
   const dueEl = document.getElementById('zakat-due');
+  const zakatEntries = calcZakatEntries();
+  const entryZakatTotal = zakatEntries.reduce((s, e) => s + e.zakat, 0);
+  const eligibleCount = zakatEntries.length;
 
-  if (nisab <= 0 || !hawl) {
-    statusEl.textContent = nisab <= 0 ? 'Set silver price & Hawl date to calculate' : 'Set the Hawl start date';
+  if (nisab <= 0) {
+    statusEl.textContent = 'Set silver price to calculate Zakat';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = '—';
-  } else if (zakatableWealth >= nisab && hawlComplete) {
-    const zakatAmount = Math.round(zakatableWealth * 0.025);
-    statusEl.textContent = 'Zakat is due — wealth exceeds Nisab & Hawl is complete';
-    statusEl.className = 'zakat-status due';
-    dueEl.textContent = formatBDT(zakatAmount);
-  } else if (zakatableWealth >= nisab && !hawlComplete) {
-    statusEl.textContent = 'Wealth exceeds Nisab — waiting for Hawl (' + daysRemaining + ' days left)';
+  } else if (zakatableWealth < nisab) {
+    statusEl.textContent = 'Zakat is not due — wealth is below Nisab (' + formatBDT(nisab) + ')';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = formatBDT(0);
+  } else if (eligibleCount > 0) {
+    statusEl.textContent = 'Zakat is due — ' + eligibleCount + ' entry(s) completed 1 lunar year';
+    statusEl.className = 'zakat-status due';
+    dueEl.textContent = formatBDT(entryZakatTotal);
   } else {
-    statusEl.textContent = 'Zakat is not due — wealth is below Nisab (' + formatBDT(nisab) + ')';
+    statusEl.textContent = 'Wealth exceeds Nisab — no entries have completed 1 lunar year yet';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = formatBDT(0);
   }
@@ -737,6 +739,57 @@ function renderSavings() {
         <button class="del" onclick="deleteEntry('${e.id}')" title="Delete">&times;</button>
       </div>
     </li>
+  `).join('');
+
+  renderZakatEntries();
+}
+
+// ===== ZAKAT PER ENTRY =====
+function getEntryAgeDays(dateStr) {
+  const start = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+}
+
+function calcZakatEntries() {
+  const allSavings = getEntries()
+    .filter(e => e.type === 'saving')
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return allSavings
+    .filter(e => getEntryAgeDays(e.date) >= LUNAR_YEAR_DAYS)
+    .map(e => ({
+      id: e.id,
+      date: e.date,
+      desc: e.desc,
+      amount: e.amount,
+      days: getEntryAgeDays(e.date),
+      zakat: Math.round(e.amount * 0.025)
+    }));
+}
+
+function renderZakatEntries() {
+  const zakatEntries = calcZakatEntries();
+  const listEl = document.getElementById('zakat-entries-list');
+  const emptyEl = document.getElementById('zakat-entries-empty');
+  const totalEl = document.getElementById('zakat-entries-total');
+
+  const totalZakat = zakatEntries.reduce((s, e) => s + e.zakat, 0);
+  totalEl.textContent = formatBDT(totalZakat);
+
+  if (!zakatEntries.length) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  listEl.innerHTML = zakatEntries.map(e => `
+    <div class="zakat-entry-row">
+      <span class="ze-date">${formatDate(e.date)}</span>
+      <span class="ze-amount">${formatBDT(e.amount)}</span>
+      <span class="ze-zakat">${formatBDT(e.zakat)}</span>
+    </div>
   `).join('');
 }
 

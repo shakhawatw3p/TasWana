@@ -914,6 +914,14 @@ header h1 small {
   margin-top: 12px;
   line-height: 1.4;
 }
+.zakat-disclaimer {
+  font-size: .68rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+  font-style: italic;
+  opacity: .7;
+}
 .zakat-result { margin-bottom: 4px; }
 .zakat-status {
   padding: 8px 12px;

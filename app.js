@@ -752,11 +752,23 @@ function getEntryAgeDays(dateStr) {
 }
 
 function calcZakatEntries() {
-  const allSavings = getEntries()
-    .filter(e => e.type === 'saving')
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const nisab = calcNisab();
+  if (nisab <= 0) return [];
 
-  return allSavings
+  // Check if total zakatable wealth exceeds Nisab
+  const entries = getEntries();
+  const loans = getLoans();
+  const totalSavings = entries.filter(e => e.type === 'saving').reduce((s, e) => s + e.amount, 0);
+  const totalLent = loans.filter(l => l.loanType === 'lent').reduce((s, l) => s + l.amount, 0);
+  const totalBorrowed = loans.filter(l => l.loanType === 'borrowed').reduce((s, l) => s + l.amount, 0);
+  const zakatableWealth = totalSavings + totalLent - totalBorrowed;
+
+  if (zakatableWealth < nisab) return [];
+
+  // Only entries that have completed 1 lunar year
+  return entries
+    .filter(e => e.type === 'saving')
+    .sort((a, b) => a.date.localeCompare(b.date))
     .filter(e => getEntryAgeDays(e.date) >= LUNAR_YEAR_DAYS)
     .map(e => ({
       id: e.id,

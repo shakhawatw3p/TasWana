@@ -827,6 +827,86 @@ header h1 small {
   text-align: center;
 }
 
+/* ===== ZAKAT CARD ===== */
+.zakat-card { position: relative; }
+.zakat-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.zakat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .85rem;
+  padding: 4px 0;
+}
+.zakat-row span { color: var(--text-secondary); }
+.zakat-row strong { font-weight: 600; }
+.zakat-row strong.negative { color: var(--danger); }
+.zakat-row.total {
+  border-top: 1.5px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+.zakat-row.total span { font-weight: 600; color: var(--text); }
+.zakat-row.total strong { font-size: 1rem; }
+.zakat-nisab-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .82rem;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.zakat-nisab-row span { color: var(--text-muted); }
+.zakat-nisab-row strong { color: var(--text-secondary); }
+.zakat-result { margin-bottom: 4px; }
+.zakat-status {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: .82rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.zakat-status.due { background: #dcfce7; color: #15803d; }
+.zakat-status.not-due { background: #f3f4f6; color: var(--text-muted); }
+.zakat-due-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .9rem;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #e8f8ee, #dcfce7);
+  border-radius: var(--radius-sm);
+}
+.zakat-due-row span { font-weight: 600; }
+.zakat-due-row strong { font-size: 1.15rem; font-weight: 700; color: var(--accent-dark); }
+.zakat-edit-form { margin-top: 14px; }
+.zakat-hint {
+  display: block;
+  font-size: .7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Mask zakat values */
+.masked .zakat-row strong,
+.masked .zakat-nisab-row strong,
+.masked .zakat-due-row strong {
+  color: transparent !important;
+  background: rgba(0,0,0,.12);
+  border-radius: 6px;
+  user-select: none;
+  display: inline-block;
+  min-width: 60px;
+}
+
 /* ===== MONEY STORAGE ===== */
 .storage-card { position: relative; }
 .storage-total-row {

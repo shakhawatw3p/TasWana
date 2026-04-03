@@ -30,6 +30,7 @@ async function syncToCloud() {
       entries: getEntries(),
       loans: getLoans(),
       moneyStorage: getMoneyStorage(),
+      nisab: getNisab(),
       pin: localStorage.getItem(PIN_KEY) || '',
       updatedAt: new Date().toISOString()
     });
@@ -50,6 +51,7 @@ async function syncFromCloud() {
       if (data.entries) saveEntriesToLocal(data.entries);
       if (data.loans) saveLoansToLocal(data.loans);
       if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
+      if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
       if (data.pin && !localStorage.getItem(PIN_KEY)) {
         localStorage.setItem(PIN_KEY, data.pin);
       }
@@ -260,6 +262,77 @@ function applyPrivacy() {
   document.getElementById('eye-open').style.display = privacyOn ? 'none' : 'block';
   document.getElementById('eye-closed').style.display = privacyOn ? 'block' : 'none';
 }
+
+// ===== ZAKAT =====
+const NISAB_KEY = 'taswana_nisab';
+
+function getNisab() {
+  return parseInt(localStorage.getItem(NISAB_KEY)) || 0;
+}
+
+function renderZakat() {
+  const entries = getEntries();
+  const loans = getLoans();
+
+  const totalSavings = entries
+    .filter(e => e.type === 'saving')
+    .reduce((s, e) => s + e.amount, 0);
+
+  const totalLent = loans
+    .filter(l => l.loanType === 'lent')
+    .reduce((s, l) => s + l.amount, 0);
+
+  const totalBorrowed = loans
+    .filter(l => l.loanType === 'borrowed')
+    .reduce((s, l) => s + l.amount, 0);
+
+  const zakatableWealth = totalSavings + totalLent - totalBorrowed;
+  const nisab = getNisab();
+
+  document.getElementById('zakat-savings').textContent = formatBDT(totalSavings);
+  document.getElementById('zakat-lent').textContent = formatBDT(totalLent);
+  document.getElementById('zakat-borrowed').textContent = formatBDT(totalBorrowed);
+  document.getElementById('zakat-total').textContent = formatBDT(zakatableWealth);
+  document.getElementById('zakat-nisab-display').textContent = nisab > 0 ? formatBDT(nisab) : 'Not set';
+
+  const statusEl = document.getElementById('zakat-status');
+  const dueEl = document.getElementById('zakat-due');
+
+  if (nisab <= 0) {
+    statusEl.textContent = 'Set the Nisab threshold to calculate Zakat';
+    statusEl.className = 'zakat-status not-due';
+    dueEl.textContent = '—';
+  } else if (zakatableWealth >= nisab) {
+    const zakatAmount = Math.round(zakatableWealth * 0.025);
+    statusEl.textContent = 'Zakat is applicable — wealth exceeds Nisab';
+    statusEl.className = 'zakat-status due';
+    dueEl.textContent = formatBDT(zakatAmount);
+  } else {
+    statusEl.textContent = 'Zakat is not due — wealth is below Nisab';
+    statusEl.className = 'zakat-status not-due';
+    dueEl.textContent = formatBDT(0);
+  }
+
+  document.getElementById('inp-nisab').value = nisab || '';
+}
+
+let zakatEditOpen = false;
+
+window.toggleZakatEdit = function() {
+  zakatEditOpen = !zakatEditOpen;
+  document.getElementById('zakat-edit').style.display = zakatEditOpen ? 'block' : 'none';
+  document.getElementById('zakat-edit-label').textContent = zakatEditOpen ? 'Cancel' : 'Set Nisab';
+};
+
+window.saveNisab = function() {
+  const val = parseInt(document.getElementById('inp-nisab').value) || 0;
+  localStorage.setItem(NISAB_KEY, val);
+  zakatEditOpen = false;
+  document.getElementById('zakat-edit').style.display = 'none';
+  document.getElementById('zakat-edit-label').textContent = 'Set Nisab';
+  renderZakat();
+  syncToCloud();
+};
 
 // ===== MONEY STORAGE =====
 const MONEY_STORAGE_KEY = 'taswana_money_storage';
@@ -505,6 +578,8 @@ function renderDashboard() {
     badge.textContent = 'Below Target';
     badge.className = 'badge below';
   }
+
+  renderZakat();
 }
 
 // ===== SAVINGS LIST =====
@@ -933,11 +1008,12 @@ if ('serviceWorker' in navigator) {
 // ===== BACKUP & RESTORE =====
 window.exportData = function() {
   const data = {
-    version: 2,
+    version: 3,
     exportDate: new Date().toISOString(),
     entries: getEntries(),
     loans: getLoans(),
     moneyStorage: getMoneyStorage(),
+    nisab: getNisab(),
     pin: localStorage.getItem(PIN_KEY),
     privacy: localStorage.getItem('taswana_privacy')
   };
@@ -977,6 +1053,7 @@ window.importData = function(event) {
       if (data.entries) saveEntries(data.entries);
       if (data.loans) saveLoans(data.loans);
       if (data.moneyStorage) saveMoneyStorage(data.moneyStorage);
+      if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
       if (data.pin) localStorage.setItem(PIN_KEY, data.pin);
       if (data.privacy) localStorage.setItem('taswana_privacy', data.privacy);
 

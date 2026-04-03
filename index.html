@@ -147,19 +147,24 @@
     <div class="card-header-row mb-12">
       <div class="card-title" style="font-weight:800;font-size:.8rem">Zakat Calculator</div>
       <button class="btn btn-sm btn-outline" onclick="toggleZakatEdit()">
-        <span id="zakat-edit-label">Set Nisab</span>
+        <span id="zakat-edit-label">Settings</span>
       </button>
     </div>
+
+    <!-- Silver price & Nisab info -->
+    <div class="zakat-silver-info" id="zakat-silver-info">
+      <div class="zakat-row"><span>Silver Price (11.66g)</span><strong id="zakat-silver-price">Not set</strong></div>
+      <div class="zakat-row"><span>Price per gram</span><strong id="zakat-per-gram">—</strong></div>
+      <div class="zakat-row"><span>Nisab (612.36g)</span><strong id="zakat-nisab-display">—</strong></div>
+    </div>
+
     <div class="zakat-breakdown">
       <div class="zakat-row"><span>Total Savings</span><strong id="zakat-savings">৳0</strong></div>
       <div class="zakat-row"><span>Money Lent (Asset)</span><strong id="zakat-lent">৳0</strong></div>
       <div class="zakat-row"><span>Money Borrowed (Liability)</span><strong id="zakat-borrowed" class="negative">৳0</strong></div>
       <div class="zakat-row total"><span>Zakatable Wealth</span><strong id="zakat-total">৳0</strong></div>
     </div>
-    <div class="zakat-nisab-row">
-      <span>Nisab Threshold</span>
-      <strong id="zakat-nisab-display">৳0</strong>
-    </div>
+
     <div class="zakat-hawl-row" id="zakat-hawl-row">
       <span>Hawl Start Date</span>
       <strong id="zakat-hawl-display">Not set</strong>
@@ -168,6 +173,7 @@
       <span>Hawl Status</span>
       <strong id="zakat-hawl-status"></strong>
     </div>
+
     <div class="zakat-result" id="zakat-result">
       <div class="zakat-status" id="zakat-status"></div>
       <div class="zakat-due-row">
@@ -175,18 +181,19 @@
         <strong id="zakat-due" class="positive">৳0</strong>
       </div>
     </div>
+
     <div class="zakat-edit-form" id="zakat-edit" style="display:none">
       <div class="form-group">
-        <label for="inp-nisab">Nisab Amount (BDT)</label>
-        <input type="number" id="inp-nisab" min="0" step="1" placeholder="e.g. 873000">
-        <small class="zakat-hint">Based on 87.48g gold or 612.36g silver market value in BDT. Update this periodically.</small>
+        <label for="inp-silver-price">Silver Price per 11.66g (BDT)</label>
+        <input type="number" id="inp-silver-price" min="0" step="1" placeholder="e.g. 3355">
+        <small class="zakat-hint">Enter the current market price of 11.66g silver in BDT. Nisab will be auto-calculated as 612.36g equivalent.</small>
       </div>
       <div class="form-group">
         <label for="inp-hawl">Hawl Start Date</label>
         <input type="date" id="inp-hawl">
         <small class="zakat-hint">The date your wealth first exceeded Nisab. Zakat becomes due after 1 lunar year (354 days).</small>
       </div>
-      <button type="button" class="btn btn-primary btn-block" onclick="saveNisab()">Update</button>
+      <button type="button" class="btn btn-primary btn-block" onclick="saveZakatSettings()">Update</button>
     </div>
   </div>
 </div>

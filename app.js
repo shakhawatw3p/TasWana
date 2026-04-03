@@ -31,7 +31,7 @@ async function syncToCloud() {
       loans: getLoans(),
       moneyStorage: getMoneyStorage(),
       target: getTarget(),
-      nisab: getNisab(),
+      silverPrice: getSilverPrice(),
       hawl: getHawlDate(),
       pin: localStorage.getItem(PIN_KEY) || '',
       updatedAt: new Date().toISOString()
@@ -54,7 +54,7 @@ async function syncFromCloud() {
       if (data.loans) saveLoansToLocal(data.loans);
       if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
       if (data.target) localStorage.setItem(TARGET_KEY, data.target);
-      if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
+      if (data.silverPrice) localStorage.setItem(SILVER_PRICE_KEY, data.silverPrice);
       if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin && !localStorage.getItem(PIN_KEY)) {
         localStorage.setItem(PIN_KEY, data.pin);
@@ -268,12 +268,21 @@ function applyPrivacy() {
 }
 
 // ===== ZAKAT =====
-const NISAB_KEY = 'taswana_nisab';
+const SILVER_PRICE_KEY = 'taswana_silver_price';
 const HAWL_KEY = 'taswana_hawl';
 const LUNAR_YEAR_DAYS = 354;
+const NISAB_GRAMS = 612.36;
+const SILVER_UNIT_GRAMS = 11.66;
 
-function getNisab() {
-  return parseInt(localStorage.getItem(NISAB_KEY)) || 0;
+function getSilverPrice() {
+  return parseInt(localStorage.getItem(SILVER_PRICE_KEY)) || 0;
+}
+
+function calcNisab() {
+  const pricePerUnit = getSilverPrice();
+  if (pricePerUnit <= 0) return 0;
+  const pricePerGram = pricePerUnit / SILVER_UNIT_GRAMS;
+  return Math.round(NISAB_GRAMS * pricePerGram);
 }
 
 function getHawlDate() {
@@ -315,16 +324,29 @@ function renderZakat() {
     .reduce((s, l) => s + l.amount, 0);
 
   const zakatableWealth = totalSavings + totalLent - totalBorrowed;
-  const nisab = getNisab();
+  const silverPrice = getSilverPrice();
+  const nisab = calcNisab();
   const hawl = getHawlDate();
   const hawlComplete = isHawlComplete();
   const daysRemaining = getHawlDaysRemaining();
 
+  // Silver & Nisab info
+  if (silverPrice > 0) {
+    const perGram = silverPrice / SILVER_UNIT_GRAMS;
+    document.getElementById('zakat-silver-price').textContent = formatBDT(silverPrice);
+    document.getElementById('zakat-per-gram').textContent = formatBDT(Math.round(perGram));
+    document.getElementById('zakat-nisab-display').textContent = formatBDT(nisab);
+  } else {
+    document.getElementById('zakat-silver-price').textContent = 'Not set';
+    document.getElementById('zakat-per-gram').textContent = '—';
+    document.getElementById('zakat-nisab-display').textContent = '—';
+  }
+
+  // Wealth breakdown
   document.getElementById('zakat-savings').textContent = formatBDT(totalSavings);
   document.getElementById('zakat-lent').textContent = formatBDT(totalLent);
   document.getElementById('zakat-borrowed').textContent = formatBDT(totalBorrowed);
   document.getElementById('zakat-total').textContent = formatBDT(zakatableWealth);
-  document.getElementById('zakat-nisab-display').textContent = nisab > 0 ? formatBDT(nisab) : 'Not set';
 
   // Hawl display
   const hawlDisplay = document.getElementById('zakat-hawl-display');
@@ -351,7 +373,7 @@ function renderZakat() {
   const dueEl = document.getElementById('zakat-due');
 
   if (nisab <= 0 || !hawl) {
-    statusEl.textContent = nisab <= 0 ? 'Set Nisab threshold & Hawl date to calculate' : 'Set the Hawl start date';
+    statusEl.textContent = nisab <= 0 ? 'Set silver price & Hawl date to calculate' : 'Set the Hawl start date';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = '—';
   } else if (zakatableWealth >= nisab && hawlComplete) {
@@ -364,12 +386,12 @@ function renderZakat() {
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = formatBDT(0);
   } else {
-    statusEl.textContent = 'Zakat is not due — wealth is below Nisab';
+    statusEl.textContent = 'Zakat is not due — wealth is below Nisab (' + formatBDT(nisab) + ')';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = formatBDT(0);
   }
 
-  document.getElementById('inp-nisab').value = nisab || '';
+  document.getElementById('inp-silver-price').value = silverPrice || '';
   document.getElementById('inp-hawl').value = hawl || '';
 }
 
@@ -381,10 +403,10 @@ window.toggleZakatEdit = function() {
   document.getElementById('zakat-edit-label').textContent = zakatEditOpen ? 'Cancel' : 'Settings';
 };
 
-window.saveNisab = function() {
-  const val = parseInt(document.getElementById('inp-nisab').value) || 0;
+window.saveZakatSettings = function() {
+  const silverVal = parseInt(document.getElementById('inp-silver-price').value) || 0;
   const hawlVal = document.getElementById('inp-hawl').value || '';
-  localStorage.setItem(NISAB_KEY, val);
+  localStorage.setItem(SILVER_PRICE_KEY, silverVal);
   localStorage.setItem(HAWL_KEY, hawlVal);
   zakatEditOpen = false;
   document.getElementById('zakat-edit').style.display = 'none';
@@ -1107,13 +1129,13 @@ if ('serviceWorker' in navigator) {
 // ===== BACKUP & RESTORE =====
 window.exportData = function() {
   const data = {
-    version: 4,
+    version: 5,
     exportDate: new Date().toISOString(),
     entries: getEntries(),
     loans: getLoans(),
     moneyStorage: getMoneyStorage(),
     target: getTarget(),
-    nisab: getNisab(),
+    silverPrice: getSilverPrice(),
     hawl: getHawlDate(),
     pin: localStorage.getItem(PIN_KEY),
     privacy: localStorage.getItem('taswana_privacy')
@@ -1155,7 +1177,7 @@ window.importData = function(event) {
       if (data.loans) saveLoans(data.loans);
       if (data.moneyStorage) saveMoneyStorage(data.moneyStorage);
       if (data.target) localStorage.setItem(TARGET_KEY, data.target);
-      if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
+      if (data.silverPrice) localStorage.setItem(SILVER_PRICE_KEY, data.silverPrice);
       if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin) localStorage.setItem(PIN_KEY, data.pin);
       if (data.privacy) localStorage.setItem('taswana_privacy', data.privacy);

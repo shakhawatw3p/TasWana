@@ -895,6 +895,15 @@ header h1 small {
 .zakat-hawl-row strong { color: var(--text-secondary); }
 .zakat-hawl-row strong.hawl-complete { color: #15803d; }
 .zakat-hawl-row strong.hawl-pending { color: var(--warning); }
+.zakat-silver-info {
+  background: #f0f4ff;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-left: 3px solid #6366f1;
+}
+.zakat-silver-info .zakat-row { padding: 2px 0; font-size: .82rem; }
+.zakat-silver-info .zakat-row strong { color: #4338ca; }
 .zakat-result { margin-bottom: 4px; }
 .zakat-status {
   padding: 8px 12px;
@@ -928,6 +937,7 @@ header h1 small {
 
 /* Mask zakat values */
 .masked .zakat-row strong,
+.masked .zakat-silver-info strong,
 .masked .zakat-nisab-row strong,
 .masked .zakat-due-row strong {
   color: transparent !important;

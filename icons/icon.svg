@@ -21,7 +21,7 @@
   <circle cx="400" cy="80" r="120" fill="url(#glow)"/>
   <circle cx="80" cy="440" r="100" fill="url(#glow)"/>
   <!-- T letter -->
-  <text x="256" y="305" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="240" font-weight="800" fill="url(#accent)" letter-spacing="-10">T</text>
+  <text x="256" y="315" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="240" font-weight="800" fill="url(#accent)">৳</text>
   <!-- Underline accent -->
   <rect x="156" y="330" width="200" height="6" rx="3" fill="url(#accent)" opacity="0.8"/>
   <!-- TasWana text -->

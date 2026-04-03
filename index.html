@@ -145,6 +145,14 @@
       <span>Nisab Threshold</span>
       <strong id="zakat-nisab-display">৳0</strong>
     </div>
+    <div class="zakat-hawl-row" id="zakat-hawl-row">
+      <span>Hawl Start Date</span>
+      <strong id="zakat-hawl-display">Not set</strong>
+    </div>
+    <div class="zakat-hawl-row" id="zakat-hawl-remaining-row" style="display:none">
+      <span>Hawl Status</span>
+      <strong id="zakat-hawl-status"></strong>
+    </div>
     <div class="zakat-result" id="zakat-result">
       <div class="zakat-status" id="zakat-status"></div>
       <div class="zakat-due-row">
@@ -158,7 +166,12 @@
         <input type="number" id="inp-nisab" min="0" step="1" placeholder="e.g. 873000">
         <small class="zakat-hint">Based on 87.48g gold or 612.36g silver market value in BDT. Update this periodically.</small>
       </div>
-      <button type="button" class="btn btn-primary btn-block" onclick="saveNisab()">Update Nisab</button>
+      <div class="form-group">
+        <label for="inp-hawl">Hawl Start Date</label>
+        <input type="date" id="inp-hawl">
+        <small class="zakat-hint">The date your wealth first exceeded Nisab. Zakat becomes due after 1 lunar year (354 days).</small>
+      </div>
+      <button type="button" class="btn btn-primary btn-block" onclick="saveNisab()">Update</button>
     </div>
   </div>
 </div>

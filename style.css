@@ -864,6 +864,20 @@ header h1 small {
 }
 .zakat-nisab-row span { color: var(--text-muted); }
 .zakat-nisab-row strong { color: var(--text-secondary); }
+.zakat-hawl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .82rem;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.zakat-hawl-row span { color: var(--text-muted); }
+.zakat-hawl-row strong { color: var(--text-secondary); }
+.zakat-hawl-row strong.hawl-complete { color: #15803d; }
+.zakat-hawl-row strong.hawl-pending { color: var(--warning); }
 .zakat-result { margin-bottom: 4px; }
 .zakat-status {
   padding: 8px 12px;

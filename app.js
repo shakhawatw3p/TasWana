@@ -31,6 +31,7 @@ async function syncToCloud() {
       loans: getLoans(),
       moneyStorage: getMoneyStorage(),
       nisab: getNisab(),
+      hawl: getHawlDate(),
       pin: localStorage.getItem(PIN_KEY) || '',
       updatedAt: new Date().toISOString()
     });
@@ -52,6 +53,7 @@ async function syncFromCloud() {
       if (data.loans) saveLoansToLocal(data.loans);
       if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
       if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
+      if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin && !localStorage.getItem(PIN_KEY)) {
         localStorage.setItem(PIN_KEY, data.pin);
       }
@@ -265,9 +267,33 @@ function applyPrivacy() {
 
 // ===== ZAKAT =====
 const NISAB_KEY = 'taswana_nisab';
+const HAWL_KEY = 'taswana_hawl';
+const LUNAR_YEAR_DAYS = 354;
 
 function getNisab() {
   return parseInt(localStorage.getItem(NISAB_KEY)) || 0;
+}
+
+function getHawlDate() {
+  return localStorage.getItem(HAWL_KEY) || '';
+}
+
+function isHawlComplete() {
+  const hawl = getHawlDate();
+  if (!hawl) return false;
+  const start = new Date(hawl + 'T00:00:00');
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return diffDays >= LUNAR_YEAR_DAYS;
+}
+
+function getHawlDaysRemaining() {
+  const hawl = getHawlDate();
+  if (!hawl) return -1;
+  const start = new Date(hawl + 'T00:00:00');
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.max(0, LUNAR_YEAR_DAYS - diffDays);
 }
 
 function renderZakat() {
@@ -288,6 +314,9 @@ function renderZakat() {
 
   const zakatableWealth = totalSavings + totalLent - totalBorrowed;
   const nisab = getNisab();
+  const hawl = getHawlDate();
+  const hawlComplete = isHawlComplete();
+  const daysRemaining = getHawlDaysRemaining();
 
   document.getElementById('zakat-savings').textContent = formatBDT(totalSavings);
   document.getElementById('zakat-lent').textContent = formatBDT(totalLent);
@@ -295,18 +324,43 @@ function renderZakat() {
   document.getElementById('zakat-total').textContent = formatBDT(zakatableWealth);
   document.getElementById('zakat-nisab-display').textContent = nisab > 0 ? formatBDT(nisab) : 'Not set';
 
+  // Hawl display
+  const hawlDisplay = document.getElementById('zakat-hawl-display');
+  const hawlRemainingRow = document.getElementById('zakat-hawl-remaining-row');
+  const hawlStatusEl = document.getElementById('zakat-hawl-status');
+
+  if (hawl) {
+    hawlDisplay.textContent = formatDate(hawl);
+    hawlRemainingRow.style.display = 'flex';
+    if (hawlComplete) {
+      hawlStatusEl.textContent = 'Hawl complete — 1 lunar year passed';
+      hawlStatusEl.className = 'hawl-complete';
+    } else {
+      hawlStatusEl.textContent = daysRemaining + ' days remaining';
+      hawlStatusEl.className = 'hawl-pending';
+    }
+  } else {
+    hawlDisplay.textContent = 'Not set';
+    hawlRemainingRow.style.display = 'none';
+  }
+
+  // Zakat status
   const statusEl = document.getElementById('zakat-status');
   const dueEl = document.getElementById('zakat-due');
 
-  if (nisab <= 0) {
-    statusEl.textContent = 'Set the Nisab threshold to calculate Zakat';
+  if (nisab <= 0 || !hawl) {
+    statusEl.textContent = nisab <= 0 ? 'Set Nisab threshold & Hawl date to calculate' : 'Set the Hawl start date';
     statusEl.className = 'zakat-status not-due';
     dueEl.textContent = '—';
-  } else if (zakatableWealth >= nisab) {
+  } else if (zakatableWealth >= nisab && hawlComplete) {
     const zakatAmount = Math.round(zakatableWealth * 0.025);
-    statusEl.textContent = 'Zakat is applicable — wealth exceeds Nisab';
+    statusEl.textContent = 'Zakat is due — wealth exceeds Nisab & Hawl is complete';
     statusEl.className = 'zakat-status due';
     dueEl.textContent = formatBDT(zakatAmount);
+  } else if (zakatableWealth >= nisab && !hawlComplete) {
+    statusEl.textContent = 'Wealth exceeds Nisab — waiting for Hawl (' + daysRemaining + ' days left)';
+    statusEl.className = 'zakat-status not-due';
+    dueEl.textContent = formatBDT(0);
   } else {
     statusEl.textContent = 'Zakat is not due — wealth is below Nisab';
     statusEl.className = 'zakat-status not-due';
@@ -314,6 +368,7 @@ function renderZakat() {
   }
 
   document.getElementById('inp-nisab').value = nisab || '';
+  document.getElementById('inp-hawl').value = hawl || '';
 }
 
 let zakatEditOpen = false;
@@ -321,15 +376,17 @@ let zakatEditOpen = false;
 window.toggleZakatEdit = function() {
   zakatEditOpen = !zakatEditOpen;
   document.getElementById('zakat-edit').style.display = zakatEditOpen ? 'block' : 'none';
-  document.getElementById('zakat-edit-label').textContent = zakatEditOpen ? 'Cancel' : 'Set Nisab';
+  document.getElementById('zakat-edit-label').textContent = zakatEditOpen ? 'Cancel' : 'Settings';
 };
 
 window.saveNisab = function() {
   const val = parseInt(document.getElementById('inp-nisab').value) || 0;
+  const hawlVal = document.getElementById('inp-hawl').value || '';
   localStorage.setItem(NISAB_KEY, val);
+  localStorage.setItem(HAWL_KEY, hawlVal);
   zakatEditOpen = false;
   document.getElementById('zakat-edit').style.display = 'none';
-  document.getElementById('zakat-edit-label').textContent = 'Set Nisab';
+  document.getElementById('zakat-edit-label').textContent = 'Settings';
   renderZakat();
   syncToCloud();
 };
@@ -1014,6 +1071,7 @@ window.exportData = function() {
     loans: getLoans(),
     moneyStorage: getMoneyStorage(),
     nisab: getNisab(),
+    hawl: getHawlDate(),
     pin: localStorage.getItem(PIN_KEY),
     privacy: localStorage.getItem('taswana_privacy')
   };
@@ -1054,6 +1112,7 @@ window.importData = function(event) {
       if (data.loans) saveLoans(data.loans);
       if (data.moneyStorage) saveMoneyStorage(data.moneyStorage);
       if (data.nisab) localStorage.setItem(NISAB_KEY, data.nisab);
+      if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
       if (data.pin) localStorage.setItem(PIN_KEY, data.pin);
       if (data.privacy) localStorage.setItem('taswana_privacy', data.privacy);
 

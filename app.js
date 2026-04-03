@@ -1,3 +1,133 @@
+// ===== PIN LOCK =====
+const PIN_KEY = 'taswana_pin';
+let currentPin = '';
+let pinMode = 'unlock'; // 'unlock', 'setup', 'new', 'confirm'
+let newPinTemp = '';
+
+function getStoredPin() {
+  return localStorage.getItem(PIN_KEY);
+}
+
+function initLock() {
+  const stored = getStoredPin();
+  if (!stored) {
+    pinMode = 'setup';
+    document.getElementById('lock-subtitle').textContent = 'Create a 4-digit PIN';
+  } else {
+    pinMode = 'unlock';
+    document.getElementById('lock-subtitle').textContent = 'Enter your PIN';
+    document.getElementById('lock-change-btn').style.display = 'none';
+  }
+  currentPin = '';
+  updateDots();
+}
+
+function pinInput(digit) {
+  if (currentPin.length >= 4) return;
+  currentPin += digit;
+  updateDots();
+
+  if (currentPin.length === 4) {
+    setTimeout(handlePinComplete, 150);
+  }
+}
+
+function pinDelete() {
+  currentPin = currentPin.slice(0, -1);
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updateDots() {
+  const dots = document.querySelectorAll('#pin-dots span');
+  dots.forEach((d, i) => {
+    d.classList.toggle('filled', i < currentPin.length);
+    d.classList.remove('error');
+  });
+}
+
+function handlePinComplete() {
+  const stored = getStoredPin();
+
+  if (pinMode === 'setup') {
+    newPinTemp = currentPin;
+    pinMode = 'confirm';
+    document.getElementById('lock-subtitle').textContent = 'Confirm your PIN';
+    currentPin = '';
+    updateDots();
+    return;
+  }
+
+  if (pinMode === 'confirm') {
+    if (currentPin === newPinTemp) {
+      localStorage.setItem(PIN_KEY, currentPin);
+      unlockApp();
+    } else {
+      showPinError("PINs don't match. Try again.");
+      pinMode = 'setup';
+      document.getElementById('lock-subtitle').textContent = 'Create a 4-digit PIN';
+      newPinTemp = '';
+    }
+    return;
+  }
+
+  if (pinMode === 'new') {
+    newPinTemp = currentPin;
+    pinMode = 'confirm';
+    document.getElementById('lock-subtitle').textContent = 'Confirm new PIN';
+    currentPin = '';
+    updateDots();
+    return;
+  }
+
+  // unlock mode
+  if (currentPin === stored) {
+    unlockApp();
+  } else {
+    showPinError('Wrong PIN');
+  }
+}
+
+function showPinError(msg) {
+  const dots = document.getElementById('pin-dots');
+  const dotsSpans = dots.querySelectorAll('span');
+  dotsSpans.forEach(d => { d.classList.add('error'); d.classList.remove('filled'); });
+  dots.classList.add('shake');
+  document.getElementById('pin-error').textContent = msg;
+  currentPin = '';
+  setTimeout(() => {
+    dots.classList.remove('shake');
+    dotsSpans.forEach(d => d.classList.remove('error'));
+  }, 500);
+}
+
+function unlockApp() {
+  const lock = document.getElementById('lock-screen');
+  lock.classList.add('unlocked');
+  setTimeout(() => { lock.style.display = 'none'; }, 300);
+}
+
+function startChangePin() {
+  pinMode = 'new';
+  document.getElementById('lock-subtitle').textContent = 'Enter new PIN';
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('lock-change-btn').style.display = 'none';
+  currentPin = '';
+  updateDots();
+}
+
+function lockApp() {
+  const lock = document.getElementById('lock-screen');
+  lock.style.display = 'flex';
+  lock.classList.remove('unlocked');
+  pinMode = 'unlock';
+  document.getElementById('lock-subtitle').textContent = 'Enter your PIN';
+  document.getElementById('lock-change-btn').style.display = 'inline-block';
+  document.getElementById('pin-error').textContent = '';
+  currentPin = '';
+  updateDots();
+}
+
 // ===== PRIVACY MODE =====
 let privacyOn = localStorage.getItem('taswana_privacy') === 'true';
 
@@ -615,5 +745,6 @@ if ('serviceWorker' in navigator) {
 }
 
 // ===== INIT =====
+initLock();
 renderDashboard();
 applyPrivacy();

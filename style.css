@@ -653,6 +653,126 @@ header h1 {
 }
 
 /* ===== UTILITY ===== */
+/* ===== LOCK SCREEN ===== */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, #075e54 0%, #0a7e6e 40%, #128c7e 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .3s, transform .3s;
+}
+.lock-screen.unlocked {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+.lock-content {
+  text-align: center;
+  color: #fff;
+  width: 100%;
+  max-width: 320px;
+  padding: 0 20px;
+}
+.lock-logo {
+  width: 64px;
+  height: 64px;
+  background: rgba(255,255,255,.15);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.8rem;
+  margin: 0 auto 16px;
+  backdrop-filter: blur(8px);
+}
+.lock-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -.3px;
+}
+.lock-subtitle {
+  font-size: .85rem;
+  opacity: .7;
+  margin-bottom: 24px;
+}
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.pin-dots span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.5);
+  transition: all .15s;
+}
+.pin-dots span.filled {
+  background: #fff;
+  border-color: #fff;
+}
+.pin-dots span.error {
+  border-color: #ff6b6b;
+  background: #ff6b6b;
+}
+.pin-error {
+  font-size: .78rem;
+  color: #ff6b6b;
+  height: 20px;
+  margin-bottom: 8px;
+}
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 260px;
+  margin: 0 auto;
+}
+.pin-pad button {
+  height: 58px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.pin-pad button:active { background: rgba(255,255,255,.25); transform: scale(.93); }
+.pin-pad button.pin-empty { background: transparent; pointer-events: none; }
+.pin-pad button.pin-action { font-size: 1rem; }
+.pin-pad button.pin-action svg { width: 24px; height: 24px; }
+.lock-change-pin {
+  margin-top: 20px;
+  border: none;
+  background: none;
+  color: rgba(255,255,255,.5);
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.pin-dots.shake { animation: shake .4s ease; }
+
 .mb-8 { margin-bottom: 8px; }
 .mb-12 { margin-bottom: 12px; }
 .mb-16 { margin-bottom: 16px; }

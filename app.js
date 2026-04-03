@@ -250,12 +250,13 @@ function navigateTo(page) {
   currentPage = page;
   navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === page));
   pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
-  fab.style.display = (page === 'graphs') ? 'none' : 'flex';
+  fab.style.display = (page === 'graphs' || page === 'settings') ? 'none' : 'flex';
   if (page === 'dashboard') renderDashboard();
   if (page === 'savings') renderSavings();
   if (page === 'expense') renderExpenses();
   if (page === 'loans') renderLoans();
   if (page === 'graphs') renderCharts();
+  if (page === 'settings') renderSettings();
 }
 
 // ===== MONTH NAVIGATION =====
@@ -756,6 +757,92 @@ function getLast12Months() {
 // ===== SERVICE WORKER =====
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
+}
+
+// ===== BACKUP & RESTORE =====
+function exportData() {
+  const data = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    entries: getEntries(),
+    loans: getLoans(),
+    pin: localStorage.getItem(PIN_KEY),
+    privacy: localStorage.getItem('taswana_privacy')
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'TasWana-backup-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  localStorage.setItem('taswana_last_backup', new Date().toISOString());
+  renderSettings();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      if (!data.entries && !data.loans) {
+        alert('Invalid backup file.');
+        return;
+      }
+
+      const entryCount = (data.entries || []).length;
+      const loanCount = (data.loans || []).length;
+
+      if (!confirm('This will replace all current data with:\n' + entryCount + ' entries\n' + loanCount + ' loans\n\nContinue?')) {
+        return;
+      }
+
+      if (data.entries) saveEntries(data.entries);
+      if (data.loans) saveLoans(data.loans);
+      if (data.pin) localStorage.setItem(PIN_KEY, data.pin);
+      if (data.privacy) localStorage.setItem('taswana_privacy', data.privacy);
+
+      localStorage.setItem('taswana_last_backup', new Date().toISOString());
+      renderSettings();
+      refreshCurrentPage();
+      alert('Data restored successfully!');
+    } catch (err) {
+      alert('Error reading backup file. Make sure it\'s a valid TasWana backup.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function renderSettings() {
+  const lastBackup = localStorage.getItem('taswana_last_backup');
+  const infoEl = document.getElementById('last-backup-info');
+  if (lastBackup) {
+    const d = new Date(lastBackup);
+    infoEl.textContent = 'Last backup: ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } else {
+    infoEl.textContent = 'No backup taken yet. Please export a backup to keep your data safe.';
+  }
+
+  const entries = getEntries();
+  const loans = getLoans();
+  const savings = entries.filter(e => e.type === 'saving').length;
+  const expenses = entries.filter(e => e.type === 'expense').length;
+  document.getElementById('data-summary').innerHTML =
+    '<strong>' + savings + '</strong> savings entries<br>' +
+    '<strong>' + expenses + '</strong> expense entries<br>' +
+    '<strong>' + loans.length + '</strong> loan entries';
+}
+
+function resetPin() {
+  if (!confirm('Change your PIN?')) return;
+  lockApp();
+  startChangePin();
 }
 
 // ===== INIT =====

@@ -773,6 +773,39 @@ header h1 {
 }
 .pin-dots.shake { animation: shake .4s ease; }
 
+/* ===== SETTINGS ===== */
+.settings-desc {
+  font-size: .85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-outline:hover { background: rgba(7,94,84,.05); }
+.import-success {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  font-weight: 500;
+  margin-top: 10px;
+  text-align: center;
+}
+
 .mb-8 { margin-bottom: 8px; }
 .mb-12 { margin-bottom: 12px; }
 .mb-16 { margin-bottom: 16px; }

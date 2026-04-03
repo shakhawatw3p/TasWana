@@ -63,6 +63,42 @@ header h1 {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -.3px;
+  flex: 1;
+}
+
+/* Privacy toggle */
+.privacy-toggle {
+  border: none;
+  background: rgba(255,255,255,.15);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+  backdrop-filter: blur(4px);
+}
+.privacy-toggle:active { transform: scale(.92); }
+.privacy-toggle svg { width: 20px; height: 20px; color: #fff; }
+
+/* Masked values */
+.masked .hero-value,
+.masked .hero-sub,
+.masked .stat-value,
+.masked .target-value,
+.masked .card-value {
+  color: transparent !important;
+  background: rgba(0,0,0,.12);
+  border-radius: 6px;
+  user-select: none;
+  display: inline-block;
+  min-width: 80px;
+}
+.masked .hero-value,
+.masked .hero-sub {
+  background: rgba(255,255,255,.15);
 }
 
 /* ===== BOTTOM NAV ===== */

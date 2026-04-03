@@ -1,3 +1,19 @@
+// ===== PRIVACY MODE =====
+let privacyOn = localStorage.getItem('taswana_privacy') === 'true';
+
+function togglePrivacy() {
+  privacyOn = !privacyOn;
+  localStorage.setItem('taswana_privacy', privacyOn);
+  applyPrivacy();
+}
+
+function applyPrivacy() {
+  const dash = document.getElementById('page-dashboard');
+  dash.classList.toggle('masked', privacyOn);
+  document.getElementById('eye-open').style.display = privacyOn ? 'none' : 'block';
+  document.getElementById('eye-closed').style.display = privacyOn ? 'block' : 'none';
+}
+
 // ===== DATA LAYER =====
 const STORAGE_KEY = 'taswana_entries';
 const LOANS_KEY = 'taswana_loans';
@@ -600,3 +616,4 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 renderDashboard();
+applyPrivacy();

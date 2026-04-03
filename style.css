@@ -1047,6 +1047,16 @@ header h1 small {
 .sync-status.offline svg { color: rgba(255,255,255,.3); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 
+/* Copyright */
+.copyright {
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 20px 0 8px;
+  letter-spacing: .2px;
+}
+
 .mb-8 { margin-bottom: 8px; }
 .mb-12 { margin-bottom: 12px; }
 .mb-16 { margin-bottom: 16px; }

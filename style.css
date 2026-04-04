@@ -1101,6 +1101,20 @@ header h1 small {
 .sync-status.offline svg { color: rgba(255,255,255,.3); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 
+/* E2E Badge */
+.e2e-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: var(--radius-sm);
+  font-size: .72rem;
+  font-weight: 600;
+}
+
 /* Copyright */
 .copyright {
   text-align: center;

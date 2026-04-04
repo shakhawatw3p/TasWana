@@ -17,6 +17,68 @@ const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 let fbUser = null;
 
+// ===== END-TO-END ENCRYPTION =====
+const SALT_KEY = 'taswana_e2e_salt';
+
+function getE2ESalt() {
+  let salt = localStorage.getItem(SALT_KEY);
+  if (!salt) {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    salt = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(SALT_KEY, salt);
+  }
+  return salt;
+}
+
+function hexToBytes(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+}
+
+async function deriveKey(pin, saltHex) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: hexToBytes(saltHex), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(plainObj, pin, saltHex) {
+  const key = await deriveKey(pin, saltHex);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(JSON.stringify(plainObj))
+  );
+  return {
+    iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join(''),
+    data: Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('')
+  };
+}
+
+async function decryptData(encObj, pin, saltHex) {
+  const key = await deriveKey(pin, saltHex);
+  const iv = hexToBytes(encObj.iv);
+  const ciphertext = hexToBytes(encObj.data);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    ciphertext
+  );
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+// ===== SYNC =====
 function setSyncStatus(status) {
   const el = document.getElementById('sync-status');
   el.className = 'sync-status ' + status;
@@ -24,16 +86,25 @@ function setSyncStatus(status) {
 
 async function syncToCloud() {
   if (!fbUser) return;
+  const pin = localStorage.getItem(PIN_KEY);
+  if (!pin) return;
   setSyncStatus('syncing');
   try {
-    await setDoc(doc(db, 'users', fbUser.uid), {
+    const salt = getE2ESalt();
+    const plainData = {
       entries: getEntries(),
       loans: getLoans(),
       moneyStorage: getMoneyStorage(),
       target: getTarget(),
       silverPrice: getSilverPrice(),
       hawl: getHawlDate(),
-      pin: localStorage.getItem(PIN_KEY) || '',
+      pin: pin
+    };
+    const encrypted = await encryptData(plainData, pin, salt);
+    await setDoc(doc(db, 'users', fbUser.uid), {
+      encrypted: encrypted,
+      salt: salt,
+      e2e: true,
       updatedAt: new Date().toISOString()
     });
     setSyncStatus('synced');
@@ -45,21 +116,43 @@ async function syncToCloud() {
 
 async function syncFromCloud() {
   if (!fbUser) return;
+  const pin = localStorage.getItem(PIN_KEY);
+  if (!pin) return;
   setSyncStatus('syncing');
   try {
     const snap = await getDoc(doc(db, 'users', fbUser.uid));
     if (snap.exists()) {
-      const data = snap.data();
-      if (data.entries) saveEntriesToLocal(data.entries);
-      if (data.loans) saveLoansToLocal(data.loans);
-      if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
-      if (data.target) localStorage.setItem(TARGET_KEY, data.target);
-      if (data.silverPrice) localStorage.setItem(SILVER_PRICE_KEY, data.silverPrice);
-      if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
-      if (data.pin && !localStorage.getItem(PIN_KEY)) {
-        localStorage.setItem(PIN_KEY, data.pin);
+      const doc_data = snap.data();
+
+      // Handle encrypted data (new format)
+      if (doc_data.e2e && doc_data.encrypted) {
+        try {
+          const salt = doc_data.salt;
+          localStorage.setItem(SALT_KEY, salt);
+          const data = await decryptData(doc_data.encrypted, pin, salt);
+          if (data.entries) saveEntriesToLocal(data.entries);
+          if (data.loans) saveLoansToLocal(data.loans);
+          if (data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(data.moneyStorage));
+          if (data.target) localStorage.setItem(TARGET_KEY, data.target);
+          if (data.silverPrice) localStorage.setItem(SILVER_PRICE_KEY, data.silverPrice);
+          if (data.hawl) localStorage.setItem(HAWL_KEY, data.hawl);
+          refreshCurrentPage();
+        } catch (decErr) {
+          console.error('Decryption failed — PIN may not match:', decErr);
+        }
       }
-      refreshCurrentPage();
+      // Handle legacy unencrypted data
+      else if (doc_data.entries) {
+        if (doc_data.entries) saveEntriesToLocal(doc_data.entries);
+        if (doc_data.loans) saveLoansToLocal(doc_data.loans);
+        if (doc_data.moneyStorage) localStorage.setItem(MONEY_STORAGE_KEY, JSON.stringify(doc_data.moneyStorage));
+        if (doc_data.target) localStorage.setItem(TARGET_KEY, doc_data.target);
+        if (doc_data.silverPrice) localStorage.setItem(SILVER_PRICE_KEY, doc_data.silverPrice);
+        if (doc_data.hawl) localStorage.setItem(HAWL_KEY, doc_data.hawl);
+        refreshCurrentPage();
+        // Re-encrypt legacy data
+        await syncToCloud();
+      }
     }
     setSyncStatus('synced');
   } catch (err) {
@@ -83,11 +176,11 @@ function updateCloudUI() {
   const signInBtn = document.getElementById('cloud-signin-btn');
   const signOutBtn = document.getElementById('cloud-signout-btn');
   if (fbUser) {
-    statusEl.innerHTML = 'Signed in as <strong>' + fbUser.email + '</strong><br>Data syncs automatically to cloud.';
+    statusEl.innerHTML = 'Signed in as <strong>' + fbUser.email + '</strong><br>Data is end-to-end encrypted with your PIN. Not even the app owner can read it.';
     signInBtn.style.display = 'none';
     signOutBtn.style.display = 'flex';
   } else {
-    statusEl.textContent = 'Sign in with Google to sync your data to the cloud. Your data will be safe even if you clear browser data.';
+    statusEl.textContent = 'Sign in with Google to sync your data to the cloud. Data is end-to-end encrypted with your PIN — only you can read it.';
     signInBtn.style.display = 'flex';
     signOutBtn.style.display = 'none';
   }

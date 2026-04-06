@@ -176,7 +176,7 @@ function updateCloudUI() {
   const signInBtn = document.getElementById('cloud-signin-btn');
   const signOutBtn = document.getElementById('cloud-signout-btn');
   if (fbUser) {
-    statusEl.innerHTML = 'Signed in as <strong>' + fbUser.email + '</strong><br>Data is end-to-end encrypted with your PIN. Not even the app owner can read it.';
+    statusEl.innerHTML = 'Signed in as <strong>' + esc(fbUser.email) + '</strong><br>Data is end-to-end encrypted with your PIN. Not even the app owner can read it.';
     signInBtn.style.display = 'none';
     signOutBtn.style.display = 'flex';
   } else {
@@ -416,7 +416,11 @@ function renderZakat() {
     .filter(l => l.loanType === 'borrowed')
     .reduce((s, l) => s + l.amount, 0);
 
-  const zakatableWealth = totalSavings + totalLent - totalBorrowed;
+  const totalExpenses = entries
+    .filter(e => e.type === 'expense')
+    .reduce((s, e) => s + e.amount, 0);
+
+  const zakatableWealth = totalSavings - totalExpenses + totalLent - totalBorrowed;
   const silverPrice = getSilverPrice();
   const nisab = calcNisab();
   const hawl = getHawlDate();
@@ -437,6 +441,7 @@ function renderZakat() {
 
   // Wealth breakdown
   document.getElementById('zakat-savings').textContent = formatBDT(totalSavings);
+  document.getElementById('zakat-expenses').textContent = formatBDT(totalExpenses);
   document.getElementById('zakat-lent').textContent = formatBDT(totalLent);
   document.getElementById('zakat-borrowed').textContent = formatBDT(totalBorrowed);
   document.getElementById('zakat-total').textContent = formatBDT(zakatableWealth);
@@ -740,6 +745,10 @@ function renderDashboard() {
     .filter(e => e.type === 'expense' && monthKey(e.date) === mk)
     .reduce((s, e) => s + e.amount, 0);
 
+  const totalExpenses = entries
+    .filter(e => e.type === 'expense')
+    .reduce((s, e) => s + e.amount, 0);
+
   const totalLent = loans
     .filter(l => l.loanType === 'lent')
     .reduce((s, l) => s + l.amount, 0);
@@ -748,7 +757,7 @@ function renderDashboard() {
     .filter(l => l.loanType === 'borrowed')
     .reduce((s, l) => s + l.amount, 0);
 
-  const netBalance = totalSavings + totalLent - totalBorrowed;
+  const netBalance = totalSavings - totalExpenses + totalLent - totalBorrowed;
 
   document.getElementById('dash-total-savings').textContent = formatBDT(totalSavings);
   const netEl = document.getElementById('dash-net-balance');
@@ -853,7 +862,8 @@ function calcZakatEntries() {
   const totalSavings = entries.filter(e => e.type === 'saving').reduce((s, e) => s + e.amount, 0);
   const totalLent = loans.filter(l => l.loanType === 'lent').reduce((s, l) => s + l.amount, 0);
   const totalBorrowed = loans.filter(l => l.loanType === 'borrowed').reduce((s, l) => s + l.amount, 0);
-  const zakatableWealth = totalSavings + totalLent - totalBorrowed;
+  const totalExpenses = entries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
+  const zakatableWealth = totalSavings - totalExpenses + totalLent - totalBorrowed;
 
   if (zakatableWealth < nisab) return [];
 

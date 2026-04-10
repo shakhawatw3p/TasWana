@@ -771,15 +771,16 @@ function renderDashboard() {
 
   const target = getTarget();
   if (target > 0) {
-    const pct = Math.min((monthSavings / target) * 100, 100);
-    document.getElementById('dash-target-val').textContent = formatBDT(monthSavings) + ' / ' + formatBDT(target);
+    const netSavings = monthSavings - monthExpense;
+    const pct = Math.min((netSavings / target) * 100, 100);
+    document.getElementById('dash-target-val').textContent = formatBDT(netSavings) + ' / ' + formatBDT(target);
     const fill = document.getElementById('dash-target-fill');
-    fill.style.width = pct + '%';
-    fill.style.background = monthSavings >= target ? 'var(--accent)' : 'var(--warning)';
+    fill.style.width = Math.max(pct, 0) + '%';
+    fill.style.background = netSavings >= target ? 'var(--accent)' : 'var(--warning)';
     document.getElementById('dash-target-label-text').textContent = 'Target: ' + formatBDT(target);
 
     const badge = document.getElementById('dash-target-badge');
-    if (monthSavings >= target) {
+    if (netSavings >= target) {
       badge.textContent = 'Above Target';
       badge.className = 'badge above';
     } else {

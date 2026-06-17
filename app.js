@@ -577,13 +577,32 @@ window.toggleStorageEdit = function() {
 };
 
 window.saveStorage = function() {
+  const oldTotal = getStorageTotal();
   const data = {
     wise: parseInt(document.getElementById('inp-wise').value) || 0,
     bank: parseInt(document.getElementById('inp-bank').value) || 0,
     mobileMoney: parseInt(document.getElementById('inp-mobile-money').value) || 0,
     cashBdt: parseInt(document.getElementById('inp-cash-bdt').value) || 0
   };
+  const newTotal = data.wise + data.bank + data.mobileMoney + data.cashBdt;
+  const diff = newTotal - oldTotal;
+
   saveMoneyStorage(data);
+
+  // Keep the transaction log in sync: log the change as a saving (increase) or expense (decrease)
+  if (diff !== 0) {
+    const entries = getEntries();
+    entries.push({
+      id: genId(),
+      type: diff > 0 ? 'saving' : 'expense',
+      amount: Math.abs(diff),
+      desc: 'Storage adjustment',
+      date: todayStr(),
+      category: diff > 0 ? '' : 'Adjustment'
+    });
+    saveEntries(entries);
+  }
+
   storageEditOpen = false;
   document.getElementById('storage-edit').style.display = 'none';
   document.getElementById('storage-display').style.display = 'flex';
